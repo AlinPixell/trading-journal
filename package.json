@@ -1,0 +1,54 @@
+{
+  "name": "trade-journal",
+  "version": "0.1.0",
+  "private": true,
+  "main": "electron/main.js",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "electron:dev": "cross-env ELECTRON_START_URL=1 concurrently \"yarn dev\" \"wait-on http://127.0.0.1:3000 && electron .\"",
+    "electron:build": "yarn build && electron-builder --mac",
+    "lint": "eslint"
+  },
+  "build": {
+    "appId": "com.tradejournal.app",
+    "productName": "Trade Journal",
+    "files": [
+      "**/*",
+      "!**/*.map",
+      "!**/*.md",
+      "!**/tests/**"
+    ],
+    "mac": {
+      "target": ["dmg", "zip"],
+      "category": "public.app-category.finance"
+    }
+  },
+  "dependencies": {
+    "@radix-ui/react-dialog": "^1.1.15",
+    "@radix-ui/react-select": "^2.2.6",
+    "@radix-ui/react-slider": "^1.3.6",
+    "date-fns": "^4.1.0",
+    "lucide-react": "^1.14.0",
+    "next": "16.2.4",
+    "react": "19.2.4",
+    "react-dom": "19.2.4",
+    "zustand": "^5.0.13"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "concurrently": "^8.2.2",
+    "cross-env": "^7.0.3",
+    "electron": "^26.0.0",
+    "electron-builder": "^26.0.0",
+    "eslint": "^9",
+    "eslint-config-next": "16.2.4",
+    "tailwindcss": "^4",
+    "typescript": "^5",
+    "wait-on": "^7.0.1"
+  }
+}
