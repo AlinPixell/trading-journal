@@ -92,13 +92,6 @@ export default function Home() {
                 >
                   New trade
                 </button>
-                <button
-                  type="button"
-                  onClick={() => router.push("/new")}
-                  className="rounded-3xl bg-emerald-400 px-5 py-3 text-sm font-semibold text-slate-950 transition hover:bg-emerald-300"
-                >
-                  New trade
-                </button>
               </div>
             </div>
             <div className="mt-6 grid w-full gap-3 sm:grid-cols-3">
