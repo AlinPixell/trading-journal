@@ -17,7 +17,7 @@ export default function StarRating({ value, onChange }: StarRatingProps) {
             key={ratingValue}
             type="button"
             onClick={() => onChange(ratingValue)}
-            className={`rounded-full p-2 transition ${ratingValue <= value ? "bg-amber-500/20 text-amber-300" : "bg-white/5 text-slate-500 hover:bg-white/10"}`}
+            className={`rounded-sm p-2 transition ${ratingValue <= value ? "bg-amber-500/20 text-amber-300" : "bg-white/5 text-slate-500 hover:bg-white/10"}`}
           >
             <Star className="h-4 w-4" />
           </button>

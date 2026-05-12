@@ -1,17 +1,20 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
-import type { Profile } from "@/types/trade";
+import type { Profile } from "@/types/settings";
+import { cn } from "@/lib/cn";
+
+const inputClass =
+  "mt-2 w-full rounded-md border border-[var(--border-soft)] bg-[var(--bg-base)] px-4 py-3 text-sm text-[var(--text-primary)] outline-none focus:border-[color-mix(in_srgb,var(--accent)_45%,transparent)]";
 
 interface ProfileFormProps {
   profile: Profile;
   onSave: (profile: Profile) => void;
   onCancel: () => void;
+  embedded?: boolean;
 }
 
-export default function ProfileForm({ profile, onSave, onCancel }: ProfileFormProps) {
-  const router = useRouter();
+export default function ProfileForm({ profile, onSave, onCancel, embedded }: ProfileFormProps) {
   const [name, setName] = useState(profile.name);
   const [tradingStyle, setTradingStyle] = useState(profile.tradingStyle);
   const [riskFocus, setRiskFocus] = useState(profile.riskFocus);
@@ -26,70 +29,69 @@ export default function ProfileForm({ profile, onSave, onCancel }: ProfileFormPr
     [bio, name, profile.bio, profile.name, profile.riskFocus, profile.tradingStyle, riskFocus, tradingStyle]
   );
 
-  return (
-    <div className="min-h-screen bg-black px-6 pb-24 pt-6 text-slate-200 sm:px-10">
-      <div className="mx-auto max-w-4xl space-y-8">
-        <header className="rounded-[2rem] border border-white/10 bg-black/90 p-6 shadow-[0_20px_80px_rgba(0,0,0,0.35)]">
-          <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Profile editor</p>
-          <h1 className="mt-2 text-3xl font-semibold text-white">Your trading profile</h1>
-          <p className="mt-3 text-sm leading-6 text-slate-400">Save personal details that inform every trade and keep the journal aligned with your trading style.</p>
-        </header>
+  const fields = (
+    <div className="space-y-4">
+      <label className="block text-sm text-[var(--text-secondary)]">
+        Name
+        <input className={inputClass} value={name} onChange={(e) => setName(e.target.value)} />
+      </label>
+      <label className="block text-sm text-[var(--text-secondary)]">
+        Trading style
+        <input className={inputClass} value={tradingStyle} onChange={(e) => setTradingStyle(e.target.value)} />
+      </label>
+      <label className="block text-sm text-[var(--text-secondary)]">
+        Risk focus
+        <input className={inputClass} value={riskFocus} onChange={(e) => setRiskFocus(e.target.value)} />
+      </label>
+      <label className="block text-sm text-[var(--text-secondary)]">
+        Bio
+        <textarea className={cn(inputClass, "min-h-[120px]")} rows={5} value={bio} onChange={(e) => setBio(e.target.value)} />
+      </label>
+    </div>
+  );
 
-        <div className="rounded-[2rem] border border-white/10 bg-black/90 p-6 shadow-[0_20px_80px_rgba(0,0,0,0.35)]">
-          <div className="space-y-6">
-            <div>
-              <label className="mb-2 block text-sm font-medium text-slate-400">Name</label>
-              <input
-                value={name}
-                onChange={(event) => setName(event.target.value)}
-                className="w-full rounded-3xl border border-white/10 bg-white/5 px-4 py-3 text-white outline-none transition focus:border-emerald-400/60 focus:ring-2 focus:ring-emerald-400/10"
-              />
-            </div>
-            <div>
-              <label className="mb-2 block text-sm font-medium text-slate-400">Trading style</label>
-              <input
-                value={tradingStyle}
-                onChange={(event) => setTradingStyle(event.target.value)}
-                className="w-full rounded-3xl border border-white/10 bg-white/5 px-4 py-3 text-white outline-none transition focus:border-emerald-400/60 focus:ring-2 focus:ring-emerald-400/10"
-              />
-            </div>
-            <div>
-              <label className="mb-2 block text-sm font-medium text-slate-400">Risk focus</label>
-              <input
-                value={riskFocus}
-                onChange={(event) => setRiskFocus(event.target.value)}
-                className="w-full rounded-3xl border border-white/10 bg-white/5 px-4 py-3 text-white outline-none transition focus:border-emerald-400/60 focus:ring-2 focus:ring-emerald-400/10"
-              />
-            </div>
-            <div>
-              <label className="mb-2 block text-sm font-medium text-slate-400">Bio</label>
-              <textarea
-                rows={6}
-                value={bio}
-                onChange={(event) => setBio(event.target.value)}
-                className="w-full rounded-3xl border border-white/10 bg-white/5 px-4 py-4 text-white outline-none transition focus:border-emerald-400/60 focus:ring-2 focus:ring-emerald-400/10"
-              />
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-white/10 bg-black/95 px-6 py-4 backdrop-blur-xl sm:px-10">
-        <div className="mx-auto flex max-w-4xl items-center justify-end gap-4">
+  if (embedded) {
+    return (
+      <section className="rounded-md border border-[var(--border)] bg-[var(--bg-raised)]/85 p-6 backdrop-blur-xl sm:p-8">
+        <h2 className="text-sm font-semibold text-[var(--text-primary)]">Profile</h2>
+        <div className="mt-5">{fields}</div>
+        <div className="mt-6 flex justify-end gap-3">
           <button
-            onClick={onCancel}
-            className="rounded-3xl border border-white/10 bg-white/5 px-6 py-3 text-sm font-semibold text-slate-200 transition hover:border-white/20 hover:bg-white/10"
+            type="button"
+            disabled={!hasChanges}
+            onClick={() => onSave({ name, tradingStyle, riskFocus, bio })}
+            className="rounded-md bg-[var(--accent)] px-5 py-2.5 text-sm font-semibold text-[#111] disabled:opacity-45"
           >
-            Cancel
+            Save profile
+          </button>
+        </div>
+      </section>
+    );
+  }
+
+  return (
+    <div className="min-h-screen px-5 pb-24 pt-8 text-[var(--text-primary)] sm:px-10">
+      <div className="mx-auto max-w-4xl space-y-8">
+        <header className="rounded-md border border-[var(--border)] bg-[var(--bg-raised)]/85 p-6 backdrop-blur-xl">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[var(--text-muted)]">Profile</p>
+          <h1 className="mt-2 text-3xl font-semibold tracking-tight">Your trading profile</h1>
+        </header>
+        <div className="rounded-md border border-[var(--border)] bg-[var(--bg-raised)]/85 p-6 backdrop-blur-xl sm:p-8">{fields}</div>
+      </div>
+      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-[var(--border-soft)] bg-[color-mix(in_srgb,var(--bg-raised)_92%,transparent)] px-5 py-4 backdrop-blur-xl">
+        <div className="mx-auto flex max-w-4xl items-center justify-end gap-3">
+          <button
+            type="button"
+            onClick={onCancel}
+            className="rounded-md border border-[var(--border-soft)] bg-white/[0.05] px-6 py-3 text-sm font-semibold text-[var(--text-secondary)]"
+          >
+            Back
           </button>
           <button
             type="button"
             disabled={!hasChanges}
-            onClick={() => {
-              onSave({ name, tradingStyle, riskFocus, bio });
-              router.push("/");
-            }}
-            className="rounded-3xl bg-emerald-400 px-6 py-3 text-sm font-semibold text-slate-950 transition disabled:cursor-not-allowed disabled:opacity-50 hover:bg-emerald-300"
+            onClick={() => onSave({ name, tradingStyle, riskFocus, bio })}
+            className="rounded-md bg-[var(--accent)] px-6 py-3 text-sm font-semibold text-[#111] disabled:opacity-45"
           >
             Save profile
           </button>

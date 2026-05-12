@@ -1,11 +1,10 @@
 import EditTradeClient from "@/components/EditTradeClient";
 
 interface EditPageProps {
-  params: {
-    id: string;
-  };
+  params: Promise<{ id: string }>;
 }
 
-export default function EditTradePage({ params }: EditPageProps) {
-  return <EditTradeClient id={params.id} />;
+export default async function EditTradePage({ params }: EditPageProps) {
+  const { id } = await params;
+  return <EditTradeClient id={decodeURIComponent(id)} />;
 }

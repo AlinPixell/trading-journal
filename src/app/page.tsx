@@ -1,155 +1,119 @@
 "use client";
 
-import { useMemo, useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import Header from "@/components/Header";
-import Calendar from "@/components/Calendar";
-import TradeTable from "@/components/TradeTable";
-import TradeDrawer from "@/components/TradeDrawer";
+import { useEffect, useMemo, useState } from "react";
+import { AppShell } from "@/components/layout/AppShell";
+import { CalendarExperience } from "@/components/calendar/CalendarExperience";
+import { TradeDetailsModal } from "@/components/trade/TradeDetailsModal";
 import { useTradeStore } from "@/store/useTradeStore";
 import { formatSelectedDate } from "@/lib/date";
+import { formatDollar } from "@/lib/utils";
+import type { Trade } from "@/types/trade";
+import { tradesForDateKey } from "@/lib/tradeHelpers";
+import { getDateKey } from "@/lib/utils";
+import Link from "next/link";
+import type { CalendarViewMode } from "@/lib/calendarTypes";
+import { TradeEventChip } from "@/components/calendar/TradeEventChip";
 
-export default function Home() {
-  const router = useRouter();
+export default function HomePage() {
+  const trades = useTradeStore((s) => s.trades);
+  const [mounted, setMounted] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
-  const [calendarMonth, setCalendarMonth] = useState<number | null>(null);
-  const [calendarYear, setCalendarYear] = useState<number | null>(null);
-  const [isMounted, setIsMounted] = useState(false);
+  const [modalTrade, setModalTrade] = useState<Trade | null>(null);
+  const [calendarView, setCalendarView] = useState<CalendarViewMode>("month");
 
   useEffect(() => {
-    const now = new Date();
-    setSelectedDate(now);
-    setCalendarMonth(now.getMonth());
-    setCalendarYear(now.getFullYear());
-    setIsMounted(true);
+    const n = new Date();
+    setSelectedDate(n);
+    setMounted(true);
   }, []);
-  const [drawerTradeId, setDrawerTradeId] = useState<string | null>(null);
 
-  const getTradesByDate = useTradeStore((state) => state.getTradesByDate);
-  const getTradesByMonth = useTradeStore((state) => state.getTradesByMonth);
-  const deleteTrade = useTradeStore((state) => state.deleteTrade);
-  const getTradeById = useTradeStore((state) => state.getTradeById);
-
-  const monthTrades = useMemo(() => {
-    if (calendarYear === null || calendarMonth === null) return [];
-    return getTradesByMonth(calendarYear, calendarMonth);
-  }, [calendarYear, calendarMonth, getTradesByMonth]);
-  const selectedTrades = useMemo(() => {
+  const dayTrades = useMemo(() => {
     if (!selectedDate) return [];
-    return getTradesByDate(selectedDate.toISOString());
-  }, [getTradesByDate, selectedDate]);
-  const selectedTrade = drawerTradeId ? getTradeById(drawerTradeId) ?? null : null;
-  const monthlyPnl = useMemo(() => monthTrades.reduce((sum, trade) => sum + trade.netROI, 0), [monthTrades]);
-  const totalTrades = monthTrades.length;
-  const winRate = useMemo(() => {
-    if (totalTrades === 0) return 0;
-    return Math.round((monthTrades.filter((trade) => trade.status === "win").length / totalTrades) * 100);
-  }, [monthTrades, totalTrades]);
+    return tradesForDateKey(trades, getDateKey(selectedDate)).sort(
+      (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+    );
+  }, [selectedDate, trades]);
 
-  if (!isMounted || !selectedDate || calendarYear === null || calendarMonth === null) {
-    return null;
-  }
+  const dayPnl = useMemo(() => dayTrades.reduce((s, t) => s + t.pnl, 0), [dayTrades]);
 
-  const handleSelectDate = (date: Date) => {
-    setSelectedDate(date);
-    setCalendarMonth(date.getMonth());
-    setCalendarYear(date.getFullYear());
-  };
-
-  const handleMonthChange = (month: number, year: number) => {
-    setCalendarMonth(month);
-    setCalendarYear(year);
-  };
-
-  const handleYearChange = (year: number) => setCalendarYear(year);
-
-  const handleView = (trade: any) => setDrawerTradeId(trade.id);
-  const handleEdit = (trade: any) => router.push(`/edit/${trade.id}`);
-  const handleDelete = (trade: any) => {
-    deleteTrade(trade.id);
-    if (drawerTradeId === trade.id) {
-      setDrawerTradeId(null);
-    }
-  };
-
-  return (
-    <div className="min-h-screen bg-black text-slate-100">
-      <Header selectedDate={formatSelectedDate(selectedDate)} />
-      <main className="mx-auto max-w-7xl px-6 py-8 sm:px-10">
-        <div className="mb-8 space-y-4">
-          <div className="rounded-[2rem] border border-white/10 bg-black/90 p-6 shadow-[0_20px_80px_rgba(0,0,0,0.35)]">
-            <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
-              <div>
-                <p className="text-xs uppercase tracking-[0.28em] text-slate-500">Trader dashboard</p>
-                <h1 className="mt-3 text-4xl font-semibold text-white">Your trading dashboard</h1>
-                <p className="mt-2 text-sm leading-6 text-slate-400">A calendar-based journal with quick access to performance metrics, personal context, and screenshot-backed trade review.</p>
-              </div>
-              <div className="flex flex-wrap gap-3">
-                <button
-                  type="button"
-                  onClick={() => router.push("/new")}
-                  className="rounded-3xl bg-emerald-400 px-5 py-3 text-sm font-semibold text-slate-950 transition hover:bg-emerald-300"
-                >
-                  New trade
-                </button>
-              </div>
-            </div>
-            <div className="mt-6 grid w-full gap-3 sm:grid-cols-3">
-              <div className="rounded-3xl border border-white/10 bg-black/30 p-4 text-center">
-                <p className="text-xs uppercase tracking-[0.3em] text-slate-500">Month P/L</p>
-                <p className="mt-3 text-2xl font-semibold text-white">{monthlyPnl >= 0 ? "+" : ""}{monthlyPnl.toFixed(1)}%</p>
-              </div>
-              <div className="rounded-3xl border border-white/10 bg-black/30 p-4 text-center">
-                <p className="text-xs uppercase tracking-[0.3em] text-slate-500">Trades</p>
-                <p className="mt-3 text-2xl font-semibold text-white">{totalTrades}</p>
-              </div>
-              <div className="rounded-3xl border border-white/10 bg-black/30 p-4 text-center">
-                <p className="text-xs uppercase tracking-[0.3em] text-slate-500">Win rate</p>
-                <p className="mt-3 text-2xl font-semibold text-white">{winRate}%</p>
-              </div>
-            </div>
+  if (!mounted || !selectedDate) {
+    return (
+      <AppShell>
+        <div className="min-h-[60vh] px-6 py-16">
+          <div className="mx-auto max-w-4xl animate-pulse space-y-4">
+            <div className="h-10 w-48 rounded-md bg-white/[0.06]" />
+            <div className="h-[480px] rounded-md bg-white/[0.04]" />
           </div>
         </div>
+      </AppShell>
+    );
+  }
 
-        <Calendar
-          year={calendarYear}
-          month={calendarMonth}
-          selectedDate={selectedDate}
-          trades={monthTrades}
-          onSelectDate={handleSelectDate}
-          onChangeMonth={handleMonthChange}
-          onChangeYear={handleYearChange}
-        />
-
-        <section className="mt-8 space-y-4">
-          <div className="flex flex-col gap-3 rounded-[2rem] border border-white/10 bg-black/90 p-6 shadow-[0_20px_80px_rgba(0,0,0,0.35)] sm:flex-row sm:items-center sm:justify-between">
+  return (
+    <AppShell>
+      <div className="min-h-screen px-5 pb-20 pt-6 sm:px-8 lg:px-10">
+        <div className="mx-auto max-w-[1400px] space-y-8">
+          <header className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
             <div>
-              <p className="text-sm uppercase tracking-[0.28em] text-slate-500">Trade list</p>
-              <h2 className="mt-2 text-2xl font-semibold text-white">Trades for {formatSelectedDate(selectedDate)}</h2>
+              <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[var(--text-muted)]">Calendar</p>
+              <h1 className="mt-2 text-3xl font-semibold tracking-tight text-[var(--text-primary)]">
+                {formatSelectedDate(selectedDate)}
+              </h1>
+              <p className="mt-2 text-sm text-[var(--text-secondary)]">
+                Day total{" "}
+                <span className={dayPnl >= 0 ? "text-emerald-300/95" : "text-red-300/90"}>
+                  {dayPnl >= 0 ? "+" : ""}
+                  {formatDollar(dayPnl)}
+                </span>
+                · {dayTrades.length} trade{dayTrades.length === 1 ? "" : "s"}
+              </p>
             </div>
-            <div className="flex flex-wrap items-center gap-3 text-sm text-slate-400">
-              <span>{selectedTrades.length} trade{selectedTrades.length === 1 ? "" : "s"} found</span>
-              <button
-                type="button"
-                onClick={() => router.push("/new")}
-                className="rounded-3xl border border-white/10 bg-white/5 px-4 py-2 text-sm font-semibold transition hover:bg-white/10"
-              >
-                Add trade
-              </button>
+            <Link
+              href="/new"
+              className="self-start rounded-md border border-[var(--border-soft)] bg-white/[0.05] px-4 py-2.5 text-sm font-semibold text-[var(--text-primary)] transition hover:bg-white/[0.08] lg:hidden"
+            >
+              New trade
+            </Link>
+          </header>
+
+          <CalendarExperience
+            trades={trades}
+            selectedDate={selectedDate}
+            onSelectDate={setSelectedDate}
+            onOpenTrade={(t) => setModalTrade(t)}
+            onViewChange={setCalendarView}
+          />
+
+          {calendarView !== "week" ? (
+          <section className="rounded-md border border-[var(--border)] bg-[var(--bg-raised)]/80 p-6 backdrop-blur-xl">
+            <div className="mb-4 flex items-center justify-between gap-3">
+              <h2 className="text-sm font-semibold text-[var(--text-primary)]">Selected day</h2>
+              <Link href="/new" className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--accent)]">
+                Log trade
+              </Link>
             </div>
-          </div>
+            {dayTrades.length === 0 ? (
+              <p className="py-10 text-center text-sm text-[var(--text-muted)]">No trades — keep the journal clean.</p>
+            ) : (
+              <ul className="space-y-1.5">
+                {dayTrades.map((t) => (
+                  <li key={t.id}>
+                    <TradeEventChip trade={t} onClick={() => setModalTrade(t)} />
+                  </li>
+                ))}
+              </ul>
+            )}
+          </section>
+          ) : null}
+        </div>
+      </div>
 
-          <TradeTable trades={selectedTrades} onView={handleView} onEdit={handleEdit} onDelete={handleDelete} />
-        </section>
-      </main>
-
-      <TradeDrawer
-        trade={selectedTrade}
-        open={Boolean(selectedTrade)}
-        onClose={() => setDrawerTradeId(null)}
-        onEdit={() => selectedTrade && handleEdit(selectedTrade)}
-        onDelete={() => selectedTrade && handleDelete(selectedTrade)}
+      <TradeDetailsModal
+        trade={modalTrade}
+        open={Boolean(modalTrade)}
+        onClose={() => setModalTrade(null)}
+        onDeleted={() => setModalTrade(null)}
       />
-    </div>
+    </AppShell>
   );
 }

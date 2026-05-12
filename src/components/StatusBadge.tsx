@@ -17,5 +17,5 @@ const statusMap: Record<TradeStatus, { label: string; className: string }> = {
 
 export default function StatusBadge({ status }: { status: TradeStatus }) {
   const info = statusMap[status];
-  return <span className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] ${info.className}`}>{info.label}</span>;
+  return <span className={`inline-flex rounded-sm px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] ${info.className}`}>{info.label}</span>;
 }

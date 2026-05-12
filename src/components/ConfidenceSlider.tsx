@@ -22,10 +22,10 @@ export default function ConfidenceSlider({ value, onChange }: ConfidenceSliderPr
         step={1}
         onValueChange={(val) => onChange(val[0])}
       >
-        <Slider.Track className="relative h-2 w-full grow overflow-hidden rounded-full bg-white/10">
-          <Slider.Range className="absolute h-full rounded-full bg-emerald-400" />
+        <Slider.Track className="relative h-2 w-full grow overflow-hidden rounded-sm bg-white/10">
+          <Slider.Range className="absolute h-full rounded-sm bg-emerald-400" />
         </Slider.Track>
-        <Slider.Thumb className="block h-5 w-5 rounded-full border border-white/10 bg-slate-200 shadow-[0_2px_10px_rgba(0,0,0,0.15)]" />
+        <Slider.Thumb className="block h-5 w-5 rounded-sm border border-white/10 bg-slate-200 shadow-[0_2px_10px_rgba(0,0,0,0.15)]" />
       </Slider.Root>
     </div>
   );

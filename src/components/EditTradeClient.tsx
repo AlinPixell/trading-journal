@@ -1,9 +1,10 @@
 "use client";
 
+import { AppShell } from "@/components/layout/AppShell";
+import { TradeEditorForm } from "@/components/trade/TradeEditorForm";
 import { useTradeStore } from "@/store/useTradeStore";
-import TradeForm from "@/components/TradeForm";
-import type { Trade } from "@/types/trade";
 import { useRouter } from "next/navigation";
+import { usePersistHydration } from "@/hooks/usePersistHydration";
 
 interface EditTradeClientProps {
   id: string;
@@ -11,35 +12,48 @@ interface EditTradeClientProps {
 
 export default function EditTradeClient({ id }: EditTradeClientProps) {
   const router = useRouter();
+  const hydrated = usePersistHydration();
   const trade = useTradeStore((state) => state.getTradeById(id));
   const updateTrade = useTradeStore((state) => state.updateTrade);
 
+  if (!hydrated) {
+    return (
+      <AppShell>
+        <div className="flex min-h-[50vh] flex-col items-center justify-center gap-3 px-6 py-16">
+          <p className="text-sm text-[var(--text-muted)]">Loading journal…</p>
+        </div>
+      </AppShell>
+    );
+  }
+
   if (!trade) {
     return (
-      <div className="min-h-screen bg-black px-6 py-16 text-center text-slate-200 sm:px-10">
-        <div className="mx-auto max-w-2xl rounded-[2rem] border border-white/10 bg-black/90 p-10 text-slate-300 shadow-[0_20px_60px_rgba(0,0,0,0.35)]">
-          <h1 className="text-3xl font-semibold text-white">Trade not found</h1>
-          <p className="mt-4 text-slate-400">This trade either has been removed or the identifier is invalid.</p>
-          <button
-            type="button"
-            onClick={() => router.push("/")}
-            className="mt-8 rounded-3xl bg-emerald-400 px-6 py-3 text-sm font-semibold text-slate-950 transition hover:bg-emerald-300"
-          >
-            Back to dashboard
-          </button>
+      <AppShell>
+        <div className="flex min-h-[50vh] items-center justify-center px-6 py-16">
+          <div className="max-w-md rounded-md border border-[var(--border)] bg-[var(--bg-raised)]/85 p-8 text-center backdrop-blur-xl">
+            <h1 className="text-xl font-semibold text-[var(--text-primary)]">Trade not found</h1>
+            <p className="mt-2 text-sm text-[var(--text-muted)]">It may have been deleted or the link is invalid.</p>
+            <button
+              type="button"
+              onClick={() => router.push("/")}
+              className="mt-6 rounded-md bg-[var(--accent)] px-5 py-2.5 text-sm font-semibold text-[#111]"
+            >
+              Back to calendar
+            </button>
+          </div>
         </div>
-      </div>
+      </AppShell>
     );
   }
 
   return (
-    <TradeForm
-      trade={trade}
-      onSave={(updated: Trade) => {
-        updateTrade(updated);
-        router.push("/");
-      }}
-      onCancel={() => router.push("/")}
-    />
+    <AppShell>
+      <TradeEditorForm
+        trade={trade}
+        isNew={false}
+        onSave={(t) => updateTrade(t)}
+        onCancel={() => router.push("/")}
+      />
+    </AppShell>
   );
 }
