@@ -11,7 +11,7 @@ const statusMap: Record<TradeStatus, { label: string; className: string }> = {
   },
   breakeven: {
     label: "Break-even",
-    className: "bg-slate-700/70 text-slate-200 ring-1 ring-white/10",
+    className: "bg-[var(--fx-07)] text-[var(--text-secondary)] ring-1 ring-[var(--border-soft)]",
   },
 };
 

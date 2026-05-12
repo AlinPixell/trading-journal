@@ -1,5 +1,7 @@
 import type { CalendarViewMode } from "@/lib/calendarTypes";
 
+export type ThemeMode = "dark" | "light";
+
 export type TradingSettings = {
   accountBalance: number;
   broker: string;
@@ -20,6 +22,7 @@ export type AppSettings = {
   animationsEnabled: boolean;
   calendarDefaultView: CalendarViewMode;
   autoCalculations: boolean;
+  theme: ThemeMode;
 };
 
 /** Optional trader profile (journal context) */

@@ -145,10 +145,10 @@ export function TradeEditorForm({
   };
 
   const inputClass =
-    "w-full rounded-md border border-[var(--border-soft)] bg-[var(--bg-base)] px-4 py-3 text-sm text-[var(--text-primary)] outline-none transition focus:border-[color-mix(in_srgb,var(--accent)_45%,transparent)]";
+    "w-full rounded-md border border-[var(--border-soft)] bg-[var(--bg-base)] px-4 py-3 text-base text-[var(--text-primary)] outline-none transition focus:border-[color-mix(in_srgb,var(--accent)_45%,transparent)] sm:text-sm";
 
   return (
-    <div className="min-h-screen px-5 pb-32 pt-8 text-[var(--text-primary)] sm:px-10 lg:px-14">
+    <div className="min-h-screen px-5 pb-[calc(9rem+env(safe-area-inset-bottom,0px))] pt-8 text-[var(--text-primary)] sm:px-10 lg:px-14">
       <div className="mx-auto max-w-4xl space-y-8">
         <header>
           <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[var(--text-muted)]">
@@ -281,7 +281,7 @@ export function TradeEditorForm({
                       "rounded-sm border px-3 py-1.5 text-xs font-medium transition",
                       tags.includes(tag)
                         ? "border-[color-mix(in_srgb,var(--accent)_50%,transparent)] bg-[color-mix(in_srgb,var(--accent)_12%,transparent)]"
-                        : "border-[var(--border-soft)] bg-white/[0.04] text-[var(--text-secondary)]"
+                        : "border-[var(--border-soft)] bg-[var(--fx-04)] text-[var(--text-secondary)]"
                     )}
                   >
                     {tag}
@@ -303,7 +303,7 @@ export function TradeEditorForm({
                       "flex w-full items-center justify-between rounded-md border px-3 py-2 text-left text-sm transition",
                       checklist.includes(item)
                         ? "border-[color-mix(in_srgb,var(--accent)_45%,transparent)] bg-[color-mix(in_srgb,var(--accent)_10%,transparent)]"
-                        : "border-[var(--border-soft)] bg-white/[0.04] text-[var(--text-secondary)]"
+                        : "border-[var(--border-soft)] bg-[var(--fx-04)] text-[var(--text-secondary)]"
                     )}
                   >
                     <span>{item}</span>
@@ -321,12 +321,12 @@ export function TradeEditorForm({
         </section>
       </div>
 
-      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-[var(--border-soft)] bg-[color-mix(in_srgb,var(--bg-raised)_92%,transparent)] px-5 py-4 backdrop-blur-2xl sm:px-10">
-        <div className="mx-auto flex max-w-4xl items-center justify-end gap-3">
+      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-[var(--border-soft)] bg-[color-mix(in_srgb,var(--bg-raised)_92%,transparent)] px-5 py-4 pb-[calc(1rem+env(safe-area-inset-bottom,0px))] backdrop-blur-2xl sm:px-10">
+        <div className="mx-auto flex max-w-4xl flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-end">
           <button
             type="button"
             onClick={onCancel}
-            className="rounded-md border border-[var(--border-soft)] bg-white/[0.05] px-6 py-3 text-sm font-semibold text-[var(--text-secondary)] transition hover:bg-white/[0.09]"
+            className="w-full rounded-md border border-[var(--border-soft)] bg-[var(--fx-05)] px-6 py-3 text-sm font-semibold text-[var(--text-secondary)] transition hover:bg-[var(--fx-09)] sm:w-auto"
           >
             Cancel
           </button>
@@ -334,7 +334,7 @@ export function TradeEditorForm({
             type="button"
             disabled={!builtTrade || !slotFree}
             onClick={handleSubmit}
-            className="rounded-md bg-[var(--accent)] px-6 py-3 text-sm font-semibold text-[#111] shadow-[0_8px_28px_var(--accent-glow)] transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-45"
+            className="w-full rounded-md bg-[var(--accent)] px-6 py-3 text-sm font-semibold text-[var(--accent-on-accent)] shadow-[0_8px_28px_var(--accent-glow)] transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-45 sm:w-auto"
           >
             {isNew ? "Save trade" : "Update trade"}
           </button>

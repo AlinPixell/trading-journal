@@ -19,8 +19,8 @@ export default function DashboardPage() {
           <Suspense
             fallback={
               <div className="animate-pulse space-y-6 pb-24 pt-8">
-                <div className="h-10 w-56 rounded-md bg-white/[0.06]" />
-                <div className="h-64 rounded-md bg-white/[0.04]" />
+                <div className="h-10 w-56 rounded-md bg-[var(--fx-06)]" />
+                <div className="h-64 rounded-md bg-[var(--fx-04)]" />
               </div>
             }
           >

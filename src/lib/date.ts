@@ -22,6 +22,16 @@ export const getCalendarDays = (year: number, month: number) => {
   return days;
 };
 
+/** Rows of Mon→Sun (length 7 each). Weekends omitted for display via `row.slice(0, 5)`. */
+export const getCalendarWeekRows = (year: number, month: number): Date[][] => {
+  const days = getCalendarDays(year, month);
+  const rows: Date[][] = [];
+  for (let i = 0; i < days.length; i += 7) {
+    rows.push(days.slice(i, i + 7));
+  }
+  return rows;
+};
+
 export const isDateInMonth = (date: Date, month: number, year: number) => {
   return isSameMonth(date, new Date(year, month, 1));
 };

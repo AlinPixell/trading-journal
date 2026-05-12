@@ -12,11 +12,63 @@
   --border-soft: rgba(255, 255, 255, 0.06);
   --accent: #c25cff;
   --accent-glow: rgba(194, 92, 255, 0.35);
-  --profit: #34d399;
+  --accent-on-accent: #111111;
+  --profit: #059669;
   --profit-soft: rgba(52, 211, 153, 0.14);
-  --loss: #f87171;
+  --loss: #dc2626;
   --loss-soft: rgba(248, 113, 113, 0.14);
   --glass: rgba(21, 21, 21, 0.72);
+  --fx-04: rgba(255, 255, 255, 0.04);
+  --fx-05: rgba(255, 255, 255, 0.05);
+  --fx-06: rgba(255, 255, 255, 0.06);
+  --fx-07: rgba(255, 255, 255, 0.07);
+  --fx-08: rgba(255, 255, 255, 0.08);
+  --fx-09: rgba(255, 255, 255, 0.09);
+  --fx-10: rgba(255, 255, 255, 0.1);
+  --fx-11: rgba(255, 255, 255, 0.11);
+  --chart-grid: rgba(255, 255, 255, 0.06);
+  --chart-axis: rgba(255, 255, 255, 0.25);
+  --chart-tooltip-bg: #151515;
+  --chart-tooltip-border: rgba(255, 255, 255, 0.1);
+  --chart-heatmap-zero: rgba(255, 255, 255, 0.04);
+  --ring-bg: rgba(255, 255, 255, 0.08);
+  --overlay-scrim: rgba(0, 0, 0, 0.55);
+  --scroll-thumb: rgba(255, 255, 255, 0.12);
+}
+
+html[data-theme="light"] {
+  color-scheme: light;
+  --bg-base: #f2f3f7;
+  --bg-raised: #ffffff;
+  --bg-cell: rgba(15, 23, 42, 0.045);
+  --text-primary: rgba(15, 23, 42, 0.94);
+  --text-secondary: rgba(15, 23, 42, 0.56);
+  --text-muted: rgba(15, 23, 42, 0.38);
+  --border: rgba(15, 23, 42, 0.11);
+  --border-soft: rgba(15, 23, 42, 0.07);
+  --accent-glow: rgba(194, 92, 255, 0.28);
+  --accent-on-accent: #111111;
+  --profit: #059669;
+  --profit-soft: rgba(5, 150, 105, 0.12);
+  --loss: #dc2626;
+  --loss-soft: rgba(220, 38, 38, 0.12);
+  --glass: rgba(255, 255, 255, 0.86);
+  --fx-04: rgba(15, 23, 42, 0.045);
+  --fx-05: rgba(15, 23, 42, 0.055);
+  --fx-06: rgba(15, 23, 42, 0.065);
+  --fx-07: rgba(15, 23, 42, 0.075);
+  --fx-08: rgba(15, 23, 42, 0.085);
+  --fx-09: rgba(15, 23, 42, 0.095);
+  --fx-10: rgba(15, 23, 42, 0.11);
+  --fx-11: rgba(15, 23, 42, 0.125);
+  --chart-grid: rgba(15, 23, 42, 0.08);
+  --chart-axis: rgba(15, 23, 42, 0.32);
+  --chart-tooltip-bg: #ffffff;
+  --chart-tooltip-border: rgba(15, 23, 42, 0.12);
+  --chart-heatmap-zero: rgba(15, 23, 42, 0.06);
+  --ring-bg: rgba(15, 23, 42, 0.11);
+  --overlay-scrim: rgba(15, 23, 42, 0.38);
+  --scroll-thumb: rgba(15, 23, 42, 0.22);
 }
 
 @theme inline {
@@ -29,13 +81,16 @@
   box-sizing: border-box;
 }
 
-html,
-body {
-  min-height: 100%;
+html {
+  overflow-x: clip;
+  min-height: 100dvh;
+  -webkit-text-size-adjust: 100%;
 }
 
 body {
   margin: 0;
+  min-height: 100dvh;
+  overflow-x: clip;
   background: var(--bg-base);
   color: var(--text-primary);
   font-family: var(--font-sans);
@@ -58,7 +113,7 @@ select {
 /* subtle scrollbars (WebKit) */
 * {
   scrollbar-width: thin;
-  scrollbar-color: rgba(255, 255, 255, 0.12) transparent;
+  scrollbar-color: var(--scroll-thumb) transparent;
 }
 
 *::-webkit-scrollbar {
@@ -67,12 +122,6 @@ select {
 }
 
 *::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.12);
+  background: var(--scroll-thumb);
   border-radius: 999px;
-}
-
-@supports (color: color-mix(in lab, red, red)) {
-  .bg-cell {
-    background-color: color-mix(in oklab, white 4%, var(--bg-base));
-  }
 }

@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import type { Trade } from "@/types/trade";
-import type { AppSettings, Profile, TradingSettings } from "@/types/settings";
+import type { AppSettings, Profile, ThemeMode, TradingSettings } from "@/types/settings";
 import { getDateKey } from "@/lib/utils";
 import {
   canAddTradeForDate,
@@ -63,6 +63,7 @@ const defaultAppSettings: AppSettings = {
   animationsEnabled: true,
   calendarDefaultView: "month",
   autoCalculations: true,
+  theme: "dark",
 };
 
 const defaultProfile: Profile = {
@@ -212,8 +213,20 @@ export const useTradeStore = create<TradeStoreState>()(
           });
         }
         const ts = p.tradingSettings as TradingSettings | undefined;
-        const app = p.appSettings as Partial<AppSettings> | undefined;
+        const appRaw = p.appSettings as Partial<AppSettings> | undefined;
         if (ts) set((s) => ({ tradingSettings: { ...s.tradingSettings, ...ts } }));
+        if (appRaw && typeof appRaw === "object") {
+          set((s) => ({
+            appSettings: {
+              ...s.appSettings,
+              ...appRaw,
+              calendarDefaultView: normalizeCalendarView(
+                appRaw.calendarDefaultView ?? s.appSettings.calendarDefaultView
+              ),
+              theme: normalizeTheme(appRaw.theme ?? s.appSettings.theme),
+            },
+          }));
+        }
         const prof = p.profile as Profile | undefined;
         if (prof) set((s) => ({ profile: { ...s.profile, ...prof } }));
       },
@@ -247,17 +260,21 @@ export const useTradeStore = create<TradeStoreState>()(
         const trades = Array.isArray(p.trades)
           ? p.trades.map((row) => normalizeTrade(row as Record<string, unknown>))
           : [];
+        const mergedApp: AppSettings = {
+          ...defaultAppSettings,
+          ...(typeof p.appSettings === "object" && p.appSettings !== null
+            ? (p.appSettings as Partial<AppSettings>)
+            : {}),
+        };
         return {
           ...p,
           trades,
           profile: p.profile ?? defaultProfile,
           tradingSettings: { ...defaultTradingSettings, ...(p.tradingSettings as object) },
           appSettings: {
-            ...defaultAppSettings,
-            ...(p.appSettings as object),
-            calendarDefaultView: normalizeCalendarView(
-              (p.appSettings as AppSettings | undefined)?.calendarDefaultView
-            ),
+            ...mergedApp,
+            calendarDefaultView: normalizeCalendarView(mergedApp.calendarDefaultView),
+            theme: normalizeTheme(mergedApp.theme),
           },
         };
       },
@@ -268,4 +285,9 @@ export const useTradeStore = create<TradeStoreState>()(
 function normalizeCalendarView(v: CalendarViewMode | undefined): CalendarViewMode {
   if (v === "day" || v === "week" || v === "month" || v === "year") return v;
   return "month";
+}
+
+function normalizeTheme(v: unknown): ThemeMode {
+  if (v === "light" || v === "dark") return v;
+  return "dark";
 }

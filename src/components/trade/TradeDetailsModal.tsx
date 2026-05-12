@@ -47,13 +47,13 @@ export function TradeDetailsModal({ trade, open, onClose, onDeleted }: TradeDeta
     <Dialog.Root open={isOpen} onOpenChange={(v) => !v && onClose()}>
       {t ? (
         <Dialog.Portal>
-          <Dialog.Overlay className="fixed inset-0 z-50 bg-black/55 backdrop-blur-md" />
+          <Dialog.Overlay className="fixed inset-0 z-50 bg-[var(--overlay-scrim)] backdrop-blur-md" />
           <Dialog.Content asChild>
             <motion.div
               className={cn(
-                "fixed left-1/2 top-1/2 z-50 max-h-[min(92vh,860px)] w-[min(96vw,560px)] -translate-x-1/2 -translate-y-1/2 overflow-y-auto",
-                "rounded-md border border-[var(--border)] bg-[color-mix(in_srgb,var(--bg-raised)_82%,transparent)] p-6 shadow-[0_40px_120px_rgba(0,0,0,0.55)] backdrop-blur-2xl sm:p-8",
-                "focus:outline-none"
+                "fixed z-50 overflow-y-auto bg-[color-mix(in_srgb,var(--bg-raised)_82%,transparent)] shadow-[0_40px_120px_rgba(0,0,0,0.55)] backdrop-blur-2xl focus:outline-none",
+                "bottom-0 left-0 right-0 top-auto max-h-[min(92dvh,calc(100dvh-env(safe-area-inset-top,0px)-env(safe-area-inset-bottom,0px)-16px))] w-full translate-x-0 translate-y-0 rounded-t-2xl rounded-b-none border-x-0 border-b-0 border-t border-[var(--border)] p-5 pb-[calc(1.25rem+env(safe-area-inset-bottom,0px))]",
+                "sm:bottom-auto sm:left-1/2 sm:top-1/2 sm:max-h-[min(92vh,860px)] sm:w-[min(96vw,560px)] sm:-translate-x-1/2 sm:-translate-y-1/2 sm:rounded-md sm:border sm:border-[var(--border)] sm:p-8 sm:pb-8"
               )}
               initial={animations ? { opacity: 0, scale: 0.96, y: 12 } : false}
               animate={animations ? { opacity: 1, scale: 1, y: 0 } : {}}
@@ -64,11 +64,11 @@ export function TradeDetailsModal({ trade, open, onClose, onDeleted }: TradeDeta
                   <Dialog.Title className="text-xl font-semibold tracking-tight text-[var(--text-primary)] sm:text-2xl">
                     {t.pair}
                   </Dialog.Title>
-                  <Dialog.Description className="mt-1 truncate text-sm text-[var(--text-secondary)]">
+                  <Dialog.Description className="mt-1 line-clamp-2 text-sm text-[var(--text-secondary)] sm:truncate">
                     {t.title}
                   </Dialog.Description>
                   <div className="mt-3 flex flex-wrap items-center gap-2">
-                    <span className="rounded-sm border border-[var(--border-soft)] bg-white/[0.06] px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-[var(--text-secondary)]">
+                    <span className="rounded-sm border border-[var(--border-soft)] bg-[var(--fx-06)] px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-[var(--text-secondary)]">
                       {t.direction}
                     </span>
                     <StatusBadge status={t.status} />
@@ -78,7 +78,7 @@ export function TradeDetailsModal({ trade, open, onClose, onDeleted }: TradeDeta
                   <button
                     type="button"
                     onClick={handleEdit}
-                    className="rounded-md border border-[var(--border-soft)] bg-white/[0.05] p-2.5 text-[var(--text-primary)] transition hover:bg-white/[0.09]"
+                    className="flex min-h-11 min-w-11 shrink-0 items-center justify-center rounded-md border border-[var(--border-soft)] bg-[var(--fx-05)] text-[var(--text-primary)] transition hover:bg-[var(--fx-09)] sm:min-h-0 sm:min-w-0 sm:p-2.5"
                     aria-label="Edit trade"
                   >
                     <Edit3 className="h-4 w-4" />
@@ -86,7 +86,7 @@ export function TradeDetailsModal({ trade, open, onClose, onDeleted }: TradeDeta
                   <Dialog.Close asChild>
                     <button
                       type="button"
-                      className="rounded-md border border-[var(--border-soft)] bg-white/[0.05] p-2.5 text-[var(--text-primary)] transition hover:bg-white/[0.09]"
+                      className="flex min-h-11 min-w-11 shrink-0 items-center justify-center rounded-md border border-[var(--border-soft)] bg-[var(--fx-05)] text-[var(--text-primary)] transition hover:bg-[var(--fx-09)] sm:min-h-0 sm:min-w-0 sm:p-2.5"
                       aria-label="Close"
                     >
                       <X className="h-4 w-4" />
@@ -136,7 +136,7 @@ export function TradeDetailsModal({ trade, open, onClose, onDeleted }: TradeDeta
               <button
                 type="button"
                 onClick={handleDelete}
-                className="flex w-full items-center justify-center gap-2 rounded-md border border-red-400/25 bg-red-500/10 py-3 text-sm font-semibold text-red-200 transition hover:bg-red-500/18"
+                className="flex min-h-11 w-full items-center justify-center gap-2 rounded-md border border-red-400/25 bg-red-500/10 py-3 text-sm font-semibold text-red-200 transition hover:bg-red-500/18"
               >
                 <Trash2 className="h-4 w-4" />
                 Delete trade

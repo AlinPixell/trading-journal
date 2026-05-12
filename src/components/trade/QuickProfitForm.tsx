@@ -95,8 +95,8 @@ export function QuickProfitForm() {
     return (
       <div className="min-h-[40vh] px-5 py-12">
         <div className="mx-auto max-w-md animate-pulse space-y-4">
-          <div className="h-8 w-36 rounded-md bg-white/[0.06]" />
-          <div className="h-24 rounded-md bg-white/[0.04]" />
+          <div className="h-8 w-36 rounded-md bg-[var(--fx-06)]" />
+          <div className="h-24 rounded-md bg-[var(--fx-04)]" />
         </div>
       </div>
     );
@@ -105,7 +105,7 @@ export function QuickProfitForm() {
   const allowedCounts = [1, 2, 3].filter((n) => n <= maxNew);
 
   return (
-    <div className="min-h-screen px-5 pb-28 pt-10 sm:px-10">
+    <div className="min-h-screen px-5 pb-[calc(8rem+env(safe-area-inset-bottom,0px))] pt-10 sm:px-10">
       <div className="mx-auto max-w-md space-y-6">
         <header>
           <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[var(--text-muted)]">New trade</p>
@@ -122,7 +122,7 @@ export function QuickProfitForm() {
             type="date"
             value={tradeDate}
             onChange={(e) => setTradeDate(e.target.value)}
-            className="mt-2 w-full rounded-md border border-[var(--border-soft)] bg-[var(--bg-base)] px-4 py-2.5 text-sm text-[var(--text-primary)] outline-none focus:border-[color-mix(in_srgb,var(--accent)_45%,transparent)]"
+            className="mt-2 w-full rounded-md border border-[var(--border-soft)] bg-[var(--bg-base)] px-4 py-2.5 text-base text-[var(--text-primary)] outline-none focus:border-[color-mix(in_srgb,var(--accent)_45%,transparent)] sm:text-sm"
           />
           {maxNew === 0 ? (
             <p className="mt-4 text-sm text-amber-200/90">
@@ -147,7 +147,7 @@ export function QuickProfitForm() {
                       "rounded-md border px-4 py-2 text-sm font-semibold transition",
                       tradeCount === n
                         ? "border-[var(--accent)] bg-[color-mix(in_srgb,var(--accent)_18%,transparent)] text-[var(--text-primary)]"
-                        : "border-[var(--border-soft)] bg-white/[0.04] text-[var(--text-secondary)]"
+                        : "border-[var(--border-soft)] bg-[var(--fx-04)] text-[var(--text-secondary)]"
                     )}
                   >
                     {n}
@@ -179,7 +179,7 @@ export function QuickProfitForm() {
                               ? d === "BUY"
                                 ? "border-emerald-500/40 bg-emerald-500/15 text-emerald-300"
                                 : "border-red-400/35 bg-red-500/12 text-red-300"
-                              : "border-[var(--border-soft)] bg-white/[0.04] text-[var(--text-muted)]"
+                              : "border-[var(--border-soft)] bg-[var(--fx-04)] text-[var(--text-muted)]"
                           )}
                         >
                           {d}
@@ -216,12 +216,12 @@ export function QuickProfitForm() {
         </p>
       </div>
 
-      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-[var(--border-soft)] bg-[color-mix(in_srgb,var(--bg-raised)_92%,transparent)] px-5 py-4 backdrop-blur-xl">
-        <div className="mx-auto flex max-w-md items-center justify-between gap-3">
+      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-[var(--border-soft)] bg-[color-mix(in_srgb,var(--bg-raised)_92%,transparent)] px-5 py-4 pb-[calc(1rem+env(safe-area-inset-bottom,0px))] backdrop-blur-xl">
+        <div className="mx-auto flex max-w-md flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-between">
           <button
             type="button"
             onClick={() => router.push("/")}
-            className="rounded-md border border-[var(--border-soft)] bg-white/[0.05] px-5 py-3 text-sm font-semibold text-[var(--text-secondary)]"
+            className="w-full rounded-md border border-[var(--border-soft)] bg-[var(--fx-05)] px-5 py-3 text-sm font-semibold text-[var(--text-secondary)] sm:w-auto"
           >
             Cancel
           </button>
@@ -230,10 +230,10 @@ export function QuickProfitForm() {
             disabled={!valid}
             onClick={handleSave}
             className={cn(
-              "rounded-md px-6 py-3 text-sm font-semibold transition",
+              "w-full rounded-md px-6 py-3 text-sm font-semibold transition sm:w-auto",
               valid
-                ? "bg-[var(--accent)] text-[#111] shadow-[0_8px_28px_var(--accent-glow)] hover:brightness-110"
-                : "cursor-not-allowed bg-white/[0.08] text-[var(--text-muted)]"
+                ? "bg-[var(--accent)] text-[var(--accent-on-accent)] shadow-[0_8px_28px_var(--accent-glow)] hover:brightness-110"
+                : "cursor-not-allowed bg-[var(--fx-08)] text-[var(--text-muted)]"
             )}
           >
             Save {rows.length === 1 ? "trade" : `${rows.length} trades`}

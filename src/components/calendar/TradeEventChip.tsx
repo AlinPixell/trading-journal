@@ -34,8 +34,10 @@ export function TradeEventChip({
       type="button"
       onClick={onClick}
       className={cn(
-        "w-full truncate text-left tabular-nums tracking-tight transition-opacity hover:opacity-85",
-        compact ? "font-normal leading-none" : "text-[10px] font-medium leading-snug sm:text-[11px]",
+        "w-full text-left tabular-nums tracking-tight transition-opacity hover:opacity-85 active:bg-[var(--fx-04)]",
+        compact
+          ? "truncate font-normal leading-none"
+          : "rounded-md px-2 py-3 text-[10px] font-medium leading-snug sm:py-2 sm:text-[11px]",
         className
       )}
     >
@@ -50,7 +52,7 @@ export function TradeEventChip({
       {!hidePair ? (
         <span
           className={cn(
-            "text-white/95",
+            "text-[var(--text-primary)]",
             compact ? "text-[7px] sm:text-[8px]" : ""
           )}
         >

@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { AccentRoot } from "@/components/AccentRoot";
@@ -14,6 +14,14 @@ export const metadata: Metadata = {
   description: "Premium local-first trading journal with calendar, analytics, and targets.",
 };
 
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+  themeColor: "#111111",
+  colorScheme: "dark",
+};
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -21,7 +29,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={`${inter.variable} h-full antialiased`}>
-      <body className="min-h-full">
+      <body className="min-h-[100dvh]">
         <AccentRoot>{children}</AccentRoot>
       </body>
     </html>

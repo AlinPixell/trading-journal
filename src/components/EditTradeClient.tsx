@@ -36,7 +36,7 @@ export default function EditTradeClient({ id }: EditTradeClientProps) {
             <button
               type="button"
               onClick={() => router.push("/")}
-              className="mt-6 rounded-md bg-[var(--accent)] px-5 py-2.5 text-sm font-semibold text-[#111]"
+              className="mt-6 rounded-md bg-[var(--accent)] px-5 py-2.5 text-sm font-semibold text-[var(--accent-on-accent)]"
             >
               Back to calendar
             </button>

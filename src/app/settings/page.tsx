@@ -20,7 +20,7 @@ export default function SettingsPage() {
   const fileRef = useRef<HTMLInputElement>(null);
 
   const input =
-    "mt-2 w-full rounded-md border border-[var(--border-soft)] bg-[var(--bg-base)] px-4 py-3 text-sm text-[var(--text-primary)] outline-none focus:border-[color-mix(in_srgb,var(--accent)_45%,transparent)]";
+    "mt-2 min-h-11 w-full rounded-md border border-[var(--border-soft)] bg-[var(--bg-base)] px-4 py-3 text-base text-[var(--text-primary)] outline-none focus:border-[color-mix(in_srgb,var(--accent)_45%,transparent)] sm:min-h-0 sm:text-sm";
 
   const exportJson = () => {
     const blob = new Blob(
@@ -98,7 +98,7 @@ export default function SettingsPage() {
 
   return (
     <AppShell>
-      <div className="min-h-screen px-5 pb-24 pt-8 sm:px-10 lg:px-14">
+      <div className="min-h-screen px-5 pb-[calc(6rem+env(safe-area-inset-bottom,0px))] pt-8 sm:px-10 lg:px-14">
       <div className="mx-auto max-w-3xl space-y-8">
         <header>
           <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[var(--text-muted)]">Settings</p>
@@ -222,6 +222,26 @@ export default function SettingsPage() {
                 onChange={(e) => updateApp({ accentColor: e.target.value })}
               />
             </label>
+            <div>
+              <p className="text-sm text-[var(--text-secondary)]">Theme</p>
+              <div className="mt-2 flex flex-wrap gap-2">
+                {(["dark", "light"] as const).map((mode) => (
+                  <button
+                    key={mode}
+                    type="button"
+                    onClick={() => updateApp({ theme: mode })}
+                    className={cn(
+                      "rounded px-3 py-2 text-xs font-semibold capitalize transition",
+                      appSettings.theme === mode
+                        ? "bg-[var(--accent)] text-[var(--accent-on-accent)]"
+                        : "border border-[var(--border-soft)] bg-[var(--fx-05)] text-[var(--text-secondary)]"
+                    )}
+                  >
+                    {mode}
+                  </button>
+                ))}
+              </div>
+            </div>
             <label className="flex items-center justify-between gap-4 rounded-md border border-[var(--border-soft)] bg-[var(--bg-cell)] px-4 py-3 text-sm text-[var(--text-secondary)]">
               Animations
               <input
@@ -251,8 +271,8 @@ export default function SettingsPage() {
                     className={cn(
                       "rounded px-3 py-2 text-xs font-semibold transition",
                       appSettings.calendarDefaultView === v.id
-                        ? "bg-[var(--accent)] text-[#111]"
-                        : "border border-[var(--border-soft)] bg-white/[0.05] text-[var(--text-secondary)]"
+                        ? "bg-[var(--accent)] text-[var(--accent-on-accent)]"
+                        : "border border-[var(--border-soft)] bg-[var(--fx-05)] text-[var(--text-secondary)]"
                     )}
                   >
                     {v.label}
@@ -269,21 +289,21 @@ export default function SettingsPage() {
             <button
               type="button"
               onClick={exportJson}
-              className="rounded-md border border-[var(--border-soft)] bg-white/[0.06] px-4 py-2.5 text-sm font-semibold text-[var(--text-primary)] transition hover:bg-white/[0.1]"
+              className="rounded-md border border-[var(--border-soft)] bg-[var(--fx-06)] px-4 py-2.5 text-sm font-semibold text-[var(--text-primary)] transition hover:bg-[var(--fx-10)]"
             >
               Export JSON backup
             </button>
             <button
               type="button"
               onClick={exportCsv}
-              className="rounded-md border border-[var(--border-soft)] bg-white/[0.06] px-4 py-2.5 text-sm font-semibold text-[var(--text-primary)] transition hover:bg-white/[0.1]"
+              className="rounded-md border border-[var(--border-soft)] bg-[var(--fx-06)] px-4 py-2.5 text-sm font-semibold text-[var(--text-primary)] transition hover:bg-[var(--fx-10)]"
             >
               Export trades CSV
             </button>
             <button
               type="button"
               onClick={() => fileRef.current?.click()}
-              className="rounded-md border border-[var(--border-soft)] bg-white/[0.06] px-4 py-2.5 text-sm font-semibold text-[var(--text-primary)] transition hover:bg-white/[0.1]"
+              className="rounded-md border border-[var(--border-soft)] bg-[var(--fx-06)] px-4 py-2.5 text-sm font-semibold text-[var(--text-primary)] transition hover:bg-[var(--fx-10)]"
             >
               Import backup JSON
             </button>
@@ -297,7 +317,7 @@ export default function SettingsPage() {
             <button
               type="button"
               onClick={() => seedDemoTrades()}
-              className="rounded-md border border-[var(--border-soft)] bg-white/[0.06] px-4 py-2.5 text-sm font-semibold text-[var(--text-secondary)] transition hover:bg-white/[0.1]"
+              className="rounded-md border border-[var(--border-soft)] bg-[var(--fx-06)] px-4 py-2.5 text-sm font-semibold text-[var(--text-secondary)] transition hover:bg-[var(--fx-10)]"
             >
               Load demo trades
             </button>

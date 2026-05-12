@@ -17,13 +17,13 @@ export default function StarRating({ value, onChange }: StarRatingProps) {
             key={ratingValue}
             type="button"
             onClick={() => onChange(ratingValue)}
-            className={`rounded-sm p-2 transition ${ratingValue <= value ? "bg-amber-500/20 text-amber-300" : "bg-white/5 text-slate-500 hover:bg-white/10"}`}
+            className={`flex min-h-11 min-w-11 items-center justify-center rounded-sm p-2 transition sm:min-h-0 sm:min-w-0 ${ratingValue <= value ? "bg-amber-500/18 text-amber-600" : "bg-[var(--fx-05)] text-[var(--text-muted)] hover:bg-[var(--fx-08)]"}`}
           >
             <Star className="h-4 w-4" />
           </button>
         );
       })}
-      <span className="text-sm text-slate-400">{value}/5</span>
+      <span className="text-sm text-[var(--text-muted)]">{value}/5</span>
     </div>
   );
 }

@@ -94,38 +94,40 @@ export function DashboardAnalytics({ initialDayKey }: DashboardAnalyticsProps = 
   const softFill = positive ? "url(#pnlGrad)" : "url(#lossGrad)";
 
   return (
-    <div className="space-y-8 pb-24 pt-8">
+    <div className="space-y-8 pb-[calc(6rem+env(safe-area-inset-bottom,0px))] pt-8">
       <header className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-        <div>
+        <div className="min-w-0">
           <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[var(--text-muted)]">Analytics</p>
-          <h1 className="mt-2 text-3xl font-semibold tracking-tight text-[var(--text-primary)]">Performance</h1>
+          <h1 className="mt-2 text-2xl font-semibold tracking-tight text-[var(--text-primary)] sm:text-3xl">Performance</h1>
           <p className="mt-2 max-w-xl text-sm text-[var(--text-secondary)]">
             Live metrics, targets, and risk-adjusted context — updated instantly when your journal changes.
           </p>
         </div>
-        <div className="flex flex-wrap items-center gap-3">
+        <div className="flex w-full min-w-0 flex-col gap-3 sm:w-auto sm:flex-row sm:flex-wrap sm:items-center">
           <input
             type="date"
             value={format(anchor, "yyyy-MM-dd")}
             onChange={(e) => setAnchor(new Date(e.target.value + "T12:00:00"))}
-            className="rounded-md border border-[var(--border-soft)] bg-[var(--bg-base)] px-3 py-2 text-sm text-[var(--text-primary)]"
+            className="min-h-11 w-full min-w-0 rounded-md border border-[var(--border-soft)] bg-[var(--bg-base)] px-3 py-2 text-base text-[var(--text-primary)] sm:min-h-0 sm:w-auto sm:max-w-[13rem] sm:text-sm"
           />
-          <div className="inline-flex rounded-md border border-[var(--border-soft)] bg-[var(--bg-cell)] p-1">
-            {periods.map((p) => (
-              <button
-                key={p.id}
-                type="button"
-                onClick={() => setPeriod(p.id)}
-                className={cn(
-                  "rounded px-3 py-2 text-xs font-semibold transition",
-                  period === p.id
-                    ? "bg-white/[0.11] text-[var(--text-primary)] shadow-[inset_0_0_0_1px_var(--border-soft)]"
-                    : "text-[var(--text-muted)] hover:text-[var(--text-secondary)]"
-                )}
-              >
-                {p.label}
-              </button>
-            ))}
+          <div className="-mx-1 overflow-x-auto pb-0.5 [-ms-overflow-style:none] [scrollbar-width:none] sm:mx-0 sm:overflow-visible [&::-webkit-scrollbar]:hidden">
+            <div className="inline-flex shrink-0 rounded-md border border-[var(--border-soft)] bg-[var(--bg-cell)] p-1">
+              {periods.map((p) => (
+                <button
+                  key={p.id}
+                  type="button"
+                  onClick={() => setPeriod(p.id)}
+                  className={cn(
+                    "min-h-10 rounded px-3 py-2 text-xs font-semibold transition sm:min-h-0",
+                    period === p.id
+                      ? "bg-[var(--fx-11)] text-[var(--text-primary)] shadow-[inset_0_0_0_1px_var(--border-soft)]"
+                      : "text-[var(--text-muted)] hover:text-[var(--text-secondary)]"
+                  )}
+                >
+                  {p.label}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
       </header>
@@ -136,7 +138,7 @@ export function DashboardAnalytics({ initialDayKey }: DashboardAnalyticsProps = 
           layout={animations}
           className="rounded-md border border-[var(--border)] bg-[var(--bg-raised)]/85 p-6 backdrop-blur-xl lg:col-span-2"
         >
-          <div className="flex flex-wrap items-start justify-between gap-4">
+          <div className="flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-start sm:justify-between">
             <div>
               <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[var(--text-muted)]">Target progress</p>
               <p className="mt-2 text-2xl font-semibold text-[var(--text-primary)]">
@@ -152,9 +154,11 @@ export function DashboardAnalytics({ initialDayKey }: DashboardAnalyticsProps = 
                     : "Set a target in Settings"}
               </p>
             </div>
-            <Ring value={progress} positive={positive} animations={animations} />
+            <div className="flex shrink-0 self-center sm:self-start">
+              <Ring value={progress} positive={positive} animations={animations} />
+            </div>
           </div>
-          <div className="mt-6 h-3 overflow-hidden rounded-sm bg-white/[0.06]">
+          <div className="mt-6 h-3 overflow-hidden rounded-sm bg-[var(--fx-06)]">
             <motion.div
               className={cn("h-full rounded-sm", positive ? "bg-[var(--accent)]" : "bg-red-400")}
               initial={false}
@@ -199,15 +203,16 @@ export function DashboardAnalytics({ initialDayKey }: DashboardAnalyticsProps = 
                     <stop offset="100%" stopColor="#f87171" stopOpacity={0} />
                   </linearGradient>
                 </defs>
-                <CartesianGrid stroke="rgba(255,255,255,0.06)" vertical={false} />
-                <XAxis dataKey="t" stroke="rgba(255,255,255,0.25)" tick={{ fontSize: 11 }} />
-                <YAxis stroke="rgba(255,255,255,0.25)" tick={{ fontSize: 11 }} width={48} />
+                <CartesianGrid stroke="var(--chart-grid)" vertical={false} />
+                <XAxis dataKey="t" stroke="var(--chart-axis)" tick={{ fontSize: 11 }} />
+                <YAxis stroke="var(--chart-axis)" tick={{ fontSize: 10 }} width={40} />
                 <Tooltip
                   contentStyle={{
-                    background: "#151515",
-                    border: "1px solid rgba(255,255,255,0.1)",
+                    background: "var(--chart-tooltip-bg)",
+                    border: "1px solid var(--chart-tooltip-border)",
                     borderRadius: 12,
                     fontSize: 12,
+                    color: "var(--text-primary)",
                   }}
                 />
                 <Area type="monotone" dataKey="equity" stroke={chartColor} fill={softFill} strokeWidth={2} animationDuration={animations ? 600 : 0} />
@@ -221,15 +226,16 @@ export function DashboardAnalytics({ initialDayKey }: DashboardAnalyticsProps = 
           <div className="mt-4 h-64 w-full min-w-0 min-h-[256px]">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={consistency}>
-                <CartesianGrid stroke="rgba(255,255,255,0.06)" vertical={false} />
-                <XAxis dataKey="day" stroke="rgba(255,255,255,0.25)" tick={{ fontSize: 10 }} interval="preserveStartEnd" />
-                <YAxis stroke="rgba(255,255,255,0.25)" tick={{ fontSize: 11 }} width={40} />
+                <CartesianGrid stroke="var(--chart-grid)" vertical={false} />
+                <XAxis dataKey="day" stroke="var(--chart-axis)" tick={{ fontSize: 10 }} interval="preserveStartEnd" />
+                <YAxis stroke="var(--chart-axis)" tick={{ fontSize: 10 }} width={36} />
                 <Tooltip
                   contentStyle={{
-                    background: "#151515",
-                    border: "1px solid rgba(255,255,255,0.1)",
+                    background: "var(--chart-tooltip-bg)",
+                    border: "1px solid var(--chart-tooltip-border)",
                     borderRadius: 12,
                     fontSize: 12,
+                    color: "var(--text-primary)",
                   }}
                 />
                 <Bar dataKey="pnl" radius={[8, 8, 0, 0]} animationDuration={animations ? 550 : 0}>
@@ -265,27 +271,29 @@ export function DashboardAnalytics({ initialDayKey }: DashboardAnalyticsProps = 
             Profitability heatmap
           </p>
           <p className="mt-1 text-sm text-[var(--text-secondary)]">{year}</p>
-          <div className="mt-4 flex flex-wrap gap-1">
-            {heatmap.map((c) => (
-              <div
-                key={c.key}
-                title={`${c.key}: ${formatDollar(c.pnl)}`}
-                className="h-2.5 w-2.5 rounded-sm"
-                style={{
-                  background:
-                    c.pnl === 0
-                      ? "rgba(255,255,255,0.04)"
-                      : c.pnl > 0
-                        ? `color-mix(in srgb, var(--accent) ${28 + c.intensity * 55}%, transparent)`
-                        : `color-mix(in srgb, #f87171 ${22 + c.intensity * 50}%, transparent)`,
-                }}
-              />
-            ))}
+          <div className="mt-4 max-w-full overflow-x-auto pb-1 [-webkit-overflow-scrolling:touch]">
+            <div className="flex flex-wrap gap-1">
+              {heatmap.map((c) => (
+                <div
+                  key={c.key}
+                  title={`${c.key}: ${formatDollar(c.pnl)}`}
+                  className="h-2.5 w-2.5 rounded-sm"
+                  style={{
+                    background:
+                      c.pnl === 0
+                        ? "var(--chart-heatmap-zero)"
+                        : c.pnl > 0
+                          ? `color-mix(in srgb, var(--accent) ${28 + c.intensity * 55}%, transparent)`
+                          : `color-mix(in srgb, #f87171 ${22 + c.intensity * 50}%, transparent)`,
+                  }}
+                />
+              ))}
+            </div>
           </div>
         </div>
       </section>
 
-      <section className="rounded-md border border-[var(--border)] border-dashed bg-[var(--bg-cell)] p-10 text-center text-sm text-[var(--text-muted)]">
+      <section className="rounded-md border border-[var(--border)] border-dashed bg-[var(--bg-cell)] px-4 py-8 text-center text-sm text-[var(--text-muted)] sm:p-10">
         Daily target {formatDollar(tradingSettings.dailyTarget)} · Monthly {formatDollar(tradingSettings.monthlyTarget)}
       </section>
     </div>
@@ -294,9 +302,9 @@ export function DashboardAnalytics({ initialDayKey }: DashboardAnalyticsProps = 
 
 function Row({ label, value }: { label: string; value: string }) {
   return (
-    <li className="flex items-center justify-between gap-4 border-b border-[var(--border-soft)] pb-3 last:border-0">
+    <li className="flex flex-col gap-1 border-b border-[var(--border-soft)] pb-3 last:border-0 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
       <span>{label}</span>
-      <span className="font-medium tabular-nums text-[var(--text-primary)]">{value}</span>
+      <span className="break-words font-medium tabular-nums text-[var(--text-primary)] sm:break-normal">{value}</span>
     </li>
   );
 }
@@ -312,7 +320,7 @@ function Ring({ value, positive, animations }: { value: number; positive: boolea
       animate={animations ? { opacity: 1, scale: 1 } : {}}
     >
       <svg className="-rotate-90" width="96" height="96" viewBox="0 0 96 96">
-        <circle cx="48" cy="48" r={r} stroke="rgba(255,255,255,0.08)" strokeWidth="8" fill="none" />
+        <circle cx="48" cy="48" r={r} stroke="var(--ring-bg)" strokeWidth="8" fill="none" />
         <motion.circle
           cx="48"
           cy="48"
