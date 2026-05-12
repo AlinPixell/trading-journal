@@ -2,21 +2,31 @@
 
 import { AppShell } from "@/components/layout/AppShell";
 import { useRef } from "react";
-import { useTradeStore } from "@/store/useTradeStore";
+import {
+  selectActiveProfile,
+  selectActiveTradingSettings,
+  selectActiveTrades,
+  useTradeStore,
+} from "@/store/useTradeStore";
 import type { CalendarViewMode } from "@/lib/calendarTypes";
 import { cn } from "@/lib/cn";
 import ProfileForm from "@/components/ProfileForm";
 
 export default function SettingsPage() {
-  const tradingSettings = useTradeStore((s) => s.tradingSettings);
+  const tradingSettings = useTradeStore(selectActiveTradingSettings);
   const appSettings = useTradeStore((s) => s.appSettings);
-  const profile = useTradeStore((s) => s.profile);
+  const profile = useTradeStore(selectActiveProfile);
+  const profiles = useTradeStore((s) => s.profiles);
+  const activeProfileId = useTradeStore((s) => s.activeProfileId);
   const updateTrading = useTradeStore((s) => s.updateTradingSettings);
   const updateApp = useTradeStore((s) => s.updateAppSettings);
   const updateProfile = useTradeStore((s) => s.updateProfile);
   const importState = useTradeStore((s) => s.importState);
-  const trades = useTradeStore((s) => s.trades);
+  const trades = useTradeStore(selectActiveTrades);
   const seedDemoTrades = useTradeStore((s) => s.seedDemoTrades);
+  const switchProfile = useTradeStore((s) => s.switchProfile);
+  const addProfile = useTradeStore((s) => s.addProfile);
+  const removeProfile = useTradeStore((s) => s.removeProfile);
   const fileRef = useRef<HTMLInputElement>(null);
 
   const input =
@@ -26,7 +36,13 @@ export default function SettingsPage() {
     const blob = new Blob(
       [
         JSON.stringify(
-          { trades, profile, tradingSettings, appSettings, exportedAt: new Date().toISOString() },
+          {
+            schemaVersion: 3,
+            profiles,
+            activeProfileId,
+            appSettings,
+            exportedAt: new Date().toISOString(),
+          },
           null,
           2
         ),
@@ -104,6 +120,55 @@ export default function SettingsPage() {
           <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[var(--text-muted)]">Settings</p>
           <h1 className="mt-2 text-3xl font-semibold tracking-tight text-[var(--text-primary)]">Workspace</h1>
         </header>
+
+        <section className="rounded-md border border-[var(--border)] bg-[var(--bg-raised)]/85 p-6 backdrop-blur-xl sm:p-8">
+          <h2 className="text-sm font-semibold text-[var(--text-primary)]">Profiles</h2>
+          <p className="mt-2 text-sm text-[var(--text-secondary)]">
+            Switch identity to load a separate journal. Each profile keeps its own trades and trading targets.
+          </p>
+          <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end">
+            <label className="block min-w-[200px] flex-1 text-sm text-[var(--text-secondary)]">
+              Active profile
+              <select
+                className={cn(input, "mt-2 cursor-pointer")}
+                value={activeProfileId}
+                onChange={(e) => switchProfile(e.target.value)}
+              >
+                {profiles.map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {p.profile.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <button
+              type="button"
+              onClick={() => {
+                const label = window.prompt("Profile display name", `Trader ${profiles.length + 1}`);
+                if (label === null) return;
+                addProfile(label || undefined);
+              }}
+              className="rounded-md border border-[var(--border-soft)] bg-[var(--fx-06)] px-4 py-2.5 text-sm font-semibold text-[var(--text-primary)] transition hover:bg-[var(--fx-10)]"
+            >
+              New profile
+            </button>
+            <button
+              type="button"
+              disabled={profiles.length <= 1}
+              onClick={() => {
+                if (profiles.length <= 1) return;
+                const active = profiles.find((p) => p.id === activeProfileId);
+                const ok = window.confirm(
+                  `Delete profile "${active?.profile.name ?? "?"}" and all of its trades? This cannot be undone.`
+                );
+                if (ok) removeProfile(activeProfileId);
+              }}
+              className="rounded-md border border-red-400/25 bg-red-500/10 px-4 py-2.5 text-sm font-semibold text-red-200 transition hover:bg-red-500/18 disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              Delete current profile
+            </button>
+          </div>
+        </section>
 
         <section className="rounded-md border border-[var(--border)] bg-[var(--bg-raised)]/85 p-6 backdrop-blur-xl sm:p-8">
           <h2 className="text-sm font-semibold text-[var(--text-primary)]">Trading</h2>
@@ -323,7 +388,8 @@ export default function SettingsPage() {
             </button>
           </div>
           <p className="mt-4 text-xs text-[var(--text-muted)]">
-            Imports merge trading/app settings when present. Keep JSON backups for recovery.
+            Imports merge trading/app settings when present. Full backups include every profile and its trades.
+            Legacy backups (single journal) apply to the profile that is active when you import.
           </p>
         </section>
 

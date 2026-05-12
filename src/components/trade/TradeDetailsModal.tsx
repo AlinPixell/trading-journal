@@ -7,7 +7,7 @@ import { useRouter } from "next/navigation";
 import type { Trade } from "@/types/trade";
 import { formatDollar } from "@/lib/utils";
 import { formatFullTimestamp, plannedRiskReward } from "@/lib/tradeHelpers";
-import { useTradeStore } from "@/store/useTradeStore";
+import { selectActiveTradingSettings, useTradeStore } from "@/store/useTradeStore";
 import StatusBadge from "@/components/StatusBadge";
 import { cn } from "@/lib/cn";
 
@@ -21,7 +21,7 @@ type TradeDetailsModalProps = {
 export function TradeDetailsModal({ trade, open, onClose, onDeleted }: TradeDetailsModalProps) {
   const router = useRouter();
   const deleteTrade = useTradeStore((s) => s.deleteTrade);
-  const accountBalance = useTradeStore((s) => s.tradingSettings.accountBalance);
+  const accountBalance = useTradeStore((s) => selectActiveTradingSettings(s).accountBalance);
   const animations = useTradeStore((s) => s.appSettings.animationsEnabled);
 
   const isOpen = open && Boolean(trade);

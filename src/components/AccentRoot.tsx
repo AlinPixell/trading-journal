@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { NewTradeModalProvider } from "@/components/layout/NewTradeModal";
 import { useTradeStore } from "@/store/useTradeStore";
 
 export function AccentRoot({ children }: { children: React.ReactNode }) {
@@ -27,5 +28,5 @@ export function AccentRoot({ children }: { children: React.ReactNode }) {
     document.documentElement.style.setProperty("--accent-glow", glow);
   }, [accent]);
 
-  return <>{children}</>;
+  return <NewTradeModalProvider>{children}</NewTradeModalProvider>;
 }

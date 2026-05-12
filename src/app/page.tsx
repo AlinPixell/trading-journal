@@ -2,20 +2,21 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { AppShell } from "@/components/layout/AppShell";
+import { useNewTradeModal } from "@/components/layout/NewTradeModal";
 import { CalendarExperience } from "@/components/calendar/CalendarExperience";
 import { TradeDetailsModal } from "@/components/trade/TradeDetailsModal";
-import { useTradeStore } from "@/store/useTradeStore";
+import { selectActiveTrades, useTradeStore } from "@/store/useTradeStore";
 import { formatSelectedDate } from "@/lib/date";
 import { formatDollar } from "@/lib/utils";
 import type { Trade } from "@/types/trade";
 import { tradesForDateKey } from "@/lib/tradeHelpers";
 import { getDateKey } from "@/lib/utils";
-import Link from "next/link";
 import type { CalendarViewMode } from "@/lib/calendarTypes";
 import { TradeEventChip } from "@/components/calendar/TradeEventChip";
 
 export default function HomePage() {
-  const trades = useTradeStore((s) => s.trades);
+  const trades = useTradeStore(selectActiveTrades);
+  const { openNewTrade } = useNewTradeModal();
   const [mounted, setMounted] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [modalTrade, setModalTrade] = useState<Trade | null>(null);
@@ -68,12 +69,13 @@ export default function HomePage() {
                 · {dayTrades.length} trade{dayTrades.length === 1 ? "" : "s"}
               </p>
             </div>
-            <Link
-              href="/new"
+            <button
+              type="button"
+              onClick={openNewTrade}
               className="min-h-11 self-start rounded-md border border-[var(--border-soft)] bg-[var(--fx-05)] px-4 py-2.5 text-center text-sm font-semibold text-[var(--text-primary)] transition hover:bg-[var(--fx-08)] lg:hidden"
             >
               New trade
-            </Link>
+            </button>
           </header>
 
           <CalendarExperience
@@ -88,9 +90,13 @@ export default function HomePage() {
           <section className="rounded-md border border-[var(--border)] bg-[var(--bg-raised)]/80 p-4 backdrop-blur-xl sm:p-6">
             <div className="mb-4 flex items-center justify-between gap-3">
               <h2 className="text-sm font-semibold text-[var(--text-primary)]">Selected day</h2>
-              <Link href="/new" className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--accent)]">
+              <button
+                type="button"
+                onClick={openNewTrade}
+                className="cursor-pointer text-xs font-semibold uppercase tracking-[0.16em] text-[var(--accent)]"
+              >
                 Log trade
-              </Link>
+              </button>
             </div>
             {dayTrades.length === 0 ? (
               <p className="py-10 text-center text-sm text-[var(--text-muted)]">No trades — keep the journal clean.</p>

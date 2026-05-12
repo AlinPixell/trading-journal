@@ -1,4 +1,5 @@
 import type { CalendarViewMode } from "@/lib/calendarTypes";
+import type { Trade } from "@/types/trade";
 
 export type ThemeMode = "dark" | "light";
 
@@ -31,4 +32,12 @@ export type Profile = {
   tradingStyle: string;
   riskFocus: string;
   bio: string;
+};
+
+/** One journal identity — separate trades, trader card, and trading settings */
+export type JournalWorkspace = {
+  id: string;
+  profile: Profile;
+  tradingSettings: TradingSettings;
+  trades: Trade[];
 };

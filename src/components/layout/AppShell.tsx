@@ -4,7 +4,8 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { CalendarDays, LayoutDashboard, Plus, Settings2 } from "lucide-react";
 import { motion } from "framer-motion";
-import { useTradeStore } from "@/store/useTradeStore";
+import { useNewTradeModal } from "@/components/layout/NewTradeModal";
+import { selectActiveProfile, useTradeStore } from "@/store/useTradeStore";
 import { cn } from "@/lib/cn";
 
 const links = [
@@ -16,6 +17,8 @@ const links = [
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const animations = useTradeStore((s) => s.appSettings.animationsEnabled);
+  const profileName = useTradeStore((s) => selectActiveProfile(s).name);
+  const { openNewTrade } = useNewTradeModal();
 
   return (
     <div className="flex min-h-[100dvh] flex-col lg:flex-row">
@@ -26,11 +29,15 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               Trade Journal
             </p>
             <p className="mt-1 truncate text-lg font-semibold tracking-tight text-[var(--text-primary)]">
+              {profileName}
+            </p>
+            <p className="truncate text-[10px] font-medium uppercase tracking-[0.18em] text-[var(--text-muted)]">
               Local-first
             </p>
           </div>
-          <Link
-            href="/new"
+          <button
+            type="button"
+            onClick={openNewTrade}
             className={cn(
               "inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-md px-4 py-2.5 text-sm font-semibold text-[var(--accent-on-accent)] transition sm:min-h-0",
               "bg-[var(--accent)] shadow-[0_8px_32px_var(--accent-glow)] hover:brightness-110"
@@ -38,7 +45,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           >
             <Plus className="h-4 w-4 shrink-0" strokeWidth={2.2} />
             <span className="hidden sm:inline">New trade</span>
-          </Link>
+          </button>
         </div>
         <nav className="-mx-1 flex gap-1 overflow-x-auto px-2 pb-3 [-ms-overflow-style:none] [scrollbar-width:none] sm:px-3 lg:mx-0 lg:flex-col lg:overflow-visible lg:px-4 lg:pb-6 [&::-webkit-scrollbar]:hidden">
           {links.map(({ href, label, icon: Icon }) => {

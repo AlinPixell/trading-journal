@@ -5,7 +5,11 @@ import { useRouter } from "next/navigation";
 import type { Trade, TradeDirection } from "@/types/trade";
 import { syncDerivedFields, canAddTradeForDate } from "@/lib/tradeHelpers";
 import { getDateKey } from "@/lib/utils";
-import { useTradeStore } from "@/store/useTradeStore";
+import {
+  selectActiveTrades,
+  selectActiveTradingSettings,
+  useTradeStore,
+} from "@/store/useTradeStore";
 import { cn } from "@/lib/cn";
 
 const allTags = ["Momentum", "Swing", "Scalping", "Breakout", "Trend", "Risk Managed"];
@@ -38,8 +42,8 @@ export function TradeEditorForm({
   isNew: boolean;
 }) {
   const router = useRouter();
-  const trades = useTradeStore((s) => s.trades);
-  const tradingSettings = useTradeStore((s) => s.tradingSettings);
+  const trades = useTradeStore(selectActiveTrades);
+  const tradingSettings = useTradeStore(selectActiveTradingSettings);
   const autoCalculations = useTradeStore((s) => s.appSettings.autoCalculations);
 
   const { dateStr: d0, timeStr: t0 } = useMemo(() => partsFromIso(trade.createdAt), [trade.createdAt]);
