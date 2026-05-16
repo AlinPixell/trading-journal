@@ -2,6 +2,8 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useState } from "react";
+import * as Dialog from "@radix-ui/react-dialog";
 import {
   BookOpen,
   CalendarDays,
@@ -9,10 +11,12 @@ import {
   History,
   LayoutDashboard,
   List,
+  Menu,
   PenTool,
   Plus,
   Settings2,
   Users,
+  X,
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { useNewTradeModal } from "@/components/layout/NewTradeModal";
@@ -41,6 +45,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const animations = useTradeStore((s) => s.appSettings.animationsEnabled);
   const profileName = useTradeStore((s) => selectActiveProfile(s).name);
   const { openNewTrade } = useNewTradeModal();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  const closeMobileMenu = () => setMobileMenuOpen(false);
 
   const { href: settingsHref, label: settingsLabel, icon: SettingsIcon } = settingsNavLink;
   const settingsActive =
@@ -63,7 +70,111 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="flex min-h-[100dvh] flex-col lg:h-[100dvh] lg:min-h-0 lg:flex-row">
-      <aside className="sticky top-0 z-40 flex min-h-0 shrink-0 flex-col border-b border-[var(--border-soft)] bg-[color-mix(in_srgb,var(--glass)_88%,transparent)] pt-[env(safe-area-inset-top,0px)] backdrop-blur-2xl lg:h-[100dvh] lg:w-[260px] lg:border-b-0 lg:border-r lg:border-[var(--border-soft)] lg:pt-0">
+      <Dialog.Root open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
+        <Dialog.Trigger asChild>
+          <button
+            type="button"
+            className={cn(
+              "fixed right-4 z-40 lg:hidden",
+              "top-[calc(12px+env(safe-area-inset-top,0px))]",
+              "inline-flex min-h-11 min-w-11 items-center justify-center rounded-md border border-[var(--border-soft)] bg-[color-mix(in_srgb,var(--glass)_88%,transparent)] text-[var(--text-primary)] shadow-sm backdrop-blur-2xl transition-colors hover:bg-[var(--fx-05)]",
+            )}
+            aria-label="Open navigation menu"
+          >
+            <Menu className="h-5 w-5" strokeWidth={2} />
+          </button>
+        </Dialog.Trigger>
+        <Dialog.Portal>
+          <Dialog.Overlay className="fixed inset-0 z-50 bg-[var(--overlay-scrim)] backdrop-blur-md lg:hidden" />
+          <Dialog.Content className="fixed left-4 right-4 top-[calc(56px+env(safe-area-inset-top,0px))] z-50 max-h-[min(540px,calc(100dvh-4rem-env(safe-area-inset-top)-env(safe-area-inset-bottom)))] overflow-y-auto rounded-md border border-[var(--border)] bg-[var(--bg-raised)] p-3 pt-14 shadow-xl outline-none backdrop-blur-2xl lg:hidden">
+            <Dialog.Title className="sr-only">Pages</Dialog.Title>
+            <Dialog.Description className="sr-only">
+              Navigate to Analytics, Calendar, Trades, and other sections.
+            </Dialog.Description>
+            <Dialog.Close asChild>
+              <button
+                type="button"
+                className="absolute right-2 top-2 flex min-h-11 min-w-11 shrink-0 items-center justify-center rounded-md border border-[var(--border-soft)] bg-[var(--fx-05)] text-[var(--text-primary)] transition hover:bg-[var(--fx-09)]"
+                aria-label="Close menu"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </Dialog.Close>
+            <button
+              type="button"
+              className={cn(
+                "mb-3 flex min-h-11 w-full origin-center items-center justify-center gap-2 rounded-md px-4 py-2.5 text-sm font-semibold text-[var(--accent-on-accent)] transition-transform duration-200 ease-out",
+                "bg-[var(--accent)] shadow-[0_-1px_15px_var(--accent-glow)] hover:scale-[1.01] active:scale-[1.005]",
+              )}
+              onClick={() => {
+                closeMobileMenu();
+                openNewTrade();
+              }}
+            >
+              <Plus className="h-4 w-4 shrink-0" strokeWidth={2.2} />
+              New trade
+            </button>
+            <ul className="flex flex-col gap-1 pb-3">
+              {mainNavLinks.map(({ href, label, icon: Icon }) => {
+                const active = pathname === href || (href !== "/" && pathname.startsWith(href));
+                return (
+                  <li key={`mnav-${href}`}>
+                    <Link
+                      href={href}
+                      onClick={closeMobileMenu}
+                      className={cn(
+                        "flex min-h-11 items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium transition-colors",
+                        active
+                          ? "bg-[var(--fx-07)] text-[var(--text-primary)] shadow-[inset_0_0_0_1px_var(--border)]"
+                          : "text-[var(--text-secondary)] hover:bg-[var(--fx-05)] hover:text-[var(--text-primary)]",
+                      )}
+                    >
+                      <Icon className="h-[18px] w-[18px] opacity-80" strokeWidth={1.75} />
+                      {label}
+                    </Link>
+                  </li>
+                );
+              })}
+            </ul>
+            <ul className="flex flex-col gap-1 border-t border-[var(--border-soft)] pt-3 pb-3">
+              {externalToolLinks.map(({ href, label }) => (
+                <li key={`mext-${href}`}>
+                  <a
+                    href={href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={cn(
+                      "flex min-h-11 items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium transition-colors",
+                      "text-[var(--text-secondary)] hover:bg-[var(--fx-05)] hover:text-[var(--text-primary)]",
+                    )}
+                    onClick={closeMobileMenu}
+                  >
+                    <ExternalLinkIcon className="h-[18px] w-[18px] opacity-80" strokeWidth={1.75} />
+                    {label}
+                  </a>
+                </li>
+              ))}
+            </ul>
+            <div className="border-t border-[var(--border-soft)] pt-2">
+              <Link
+                href={settingsHref}
+                onClick={closeMobileMenu}
+                className={cn(
+                  "flex min-h-11 w-full items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium transition-colors",
+                  settingsActive
+                    ? "bg-[var(--fx-07)] text-[var(--text-primary)] shadow-[inset_0_0_0_1px_var(--border)]"
+                    : "text-[var(--text-secondary)] hover:bg-[var(--fx-05)] hover:text-[var(--text-primary)]",
+                )}
+              >
+                <SettingsIcon className="h-[18px] w-[18px] opacity-80" strokeWidth={1.75} />
+                {settingsLabel}
+              </Link>
+            </div>
+          </Dialog.Content>
+        </Dialog.Portal>
+      </Dialog.Root>
+
+      <aside className="hidden min-h-0 w-[260px] shrink-0 flex-col border-r border-[var(--border-soft)] bg-[color-mix(in_srgb,var(--glass)_88%,transparent)] backdrop-blur-2xl lg:flex lg:h-[100dvh]">
         <div className="flex items-center justify-between gap-3 px-4 py-4 sm:px-5 sm:py-5 lg:flex-col lg:items-stretch">
           <div className="min-w-0 lg:mb-2">
             <p className="text-[10px] font-medium uppercase tracking-[0.22em] text-[var(--text-muted)]">
@@ -88,7 +199,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             <span className="hidden sm:inline">New trade</span>
           </button>
         </div>
-        <nav className="-mx-1 flex min-h-0 flex-1 flex-row gap-1 overflow-x-auto px-2 pb-3 [-ms-overflow-style:none] [scrollbar-width:none] sm:px-3 lg:mx-0 lg:flex-col lg:gap-1 lg:overflow-y-auto lg:overflow-x-visible lg:px-4 lg:pb-6 [&::-webkit-scrollbar]:hidden">
+        <nav className="flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto overflow-x-visible px-4 pb-6">
           {mainNavLinks.map(({ href, label, icon: Icon }) => {
             const active = pathname === href || (href !== "/" && pathname.startsWith(href));
             const sectionTop = href === "/backtesting" || href === "/profiles";
@@ -120,34 +231,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               </div>
             );
           })}
-          <div className="flex shrink-0 gap-1 lg:hidden">
-            {externalToolLinks.map(({ href, label }) => {
-              const link = (
-                <a
-                  href={href}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className={cn(
-                    "flex min-h-11 shrink-0 items-center gap-2 whitespace-nowrap rounded-md px-3 py-2.5 text-sm font-medium transition-colors",
-                    "text-[var(--text-secondary)] hover:bg-[var(--fx-05)] hover:text-[var(--text-primary)]",
-                  )}
-                >
-                  <ExternalLinkIcon className="h-[18px] w-[18px] opacity-80" strokeWidth={1.75} />
-                  {label}
-                </a>
-              );
-              return animations ? (
-                <motion.div key={href} whileTap={{ scale: 0.98 }} className="shrink-0">
-                  {link}
-                </motion.div>
-              ) : (
-                <div key={href} className="shrink-0">
-                  {link}
-                </div>
-              );
-            })}
-          </div>
-          <div className="hidden min-h-0 flex-1 flex-col justify-center gap-1 px-1 py-2 lg:flex">
+          <div className="flex min-h-0 flex-1 flex-col justify-center gap-1 px-1 py-2">
             {externalToolLinks.map(({ href, label }) => {
               const link = (
                 <a
