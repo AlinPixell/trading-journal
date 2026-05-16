@@ -1,7 +1,5 @@
 "use client";
 
-import Link from "next/link";
-import { usePathname } from "next/navigation";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import {
   Area,
@@ -45,12 +43,6 @@ const periods: { id: AnalyticsPeriod; label: string }[] = [
   { id: "yearly", label: "Yearly" },
 ];
 
-const workspaceLinks = [
-  { href: "/trades", label: "Trades" },
-  { href: "/backtesting", label: "Backtesting" },
-  { href: "/analysis", label: "Analysis" },
-] as const;
-
 const dashboardMainChartFrameClass = "mt-4 h-54 min-h-54 w-full min-w-0";
 
 function parseDayParam(key: string | null | undefined): Date | null {
@@ -67,7 +59,6 @@ export type DashboardAnalyticsProps = {
 export function DashboardAnalytics({
   initialDayKey,
 }: DashboardAnalyticsProps = {}) {
-  const pathname = usePathname();
   const trades = useTradeStore(selectActiveTrades);
   const tradingSettings = useTradeStore(selectActiveTradingSettings);
   const profileName = useTradeStore((s) => selectActiveProfile(s).name);
@@ -202,28 +193,6 @@ export function DashboardAnalytics({
                   {p.label}
                 </button>
               ))}
-            </div>
-          </div>
-          <div className="-mx-1 overflow-x-auto pb-0.5 [-ms-overflow-style:none] [scrollbar-width:none] sm:mx-0 sm:overflow-visible [&::-webkit-scrollbar]:hidden">
-            <div className="inline-flex shrink-0 gap-1 rounded-md border border-[var(--border-soft)] bg-[var(--bg-cell)] p-1">
-              {workspaceLinks.map(({ href, label }) => {
-                const active =
-                  pathname === href || pathname.startsWith(`${href}/`);
-                return (
-                  <Link
-                    key={href}
-                    href={href}
-                    className={cn(
-                      "inline-flex min-h-10 items-center rounded px-3 py-2 text-xs font-semibold transition sm:min-h-0",
-                      active
-                        ? "bg-[var(--fx-11)] text-[var(--text-primary)] shadow-[inset_0_0_0_1px_var(--border-soft)]"
-                        : "text-[var(--text-muted)] hover:text-[var(--text-secondary)]",
-                    )}
-                  >
-                    {label}
-                  </Link>
-                );
-              })}
             </div>
           </div>
         </div>
