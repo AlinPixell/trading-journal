@@ -1,5 +1,6 @@
 import { create } from "zustand";
-import { persist } from "zustand/middleware";
+import { createJSONStorage, persist } from "zustand/middleware";
+import type { StateStorage } from "zustand/middleware";
 import type { Trade } from "@/types/trade";
 import type { CandlePlaybookItem, StrategyPlaybookItem } from "@/types/playbook";
 import type {
@@ -16,6 +17,9 @@ import {
   normalizeStrategyPlaybookItem,
 } from "@/lib/playbookHelpers";
 import type { CalendarViewMode } from "@/lib/calendarTypes";
+
+/** localStorage key — use when listening for cross-tab journal updates */
+export const TRADE_JOURNAL_PERSIST_KEY = "trade-journal-storage";
 
 export type TradeStoreState = {
   profiles: JournalWorkspace[];
@@ -47,19 +51,12 @@ export type TradeStoreState = {
   removeCandlePlaybookItem: (id: string) => void;
 };
 
-const fallbackStorage: Storage = {
-  getItem: (_name: string) => null as any,
-  setItem: (_name: string, _value: string) => {},
-  removeItem: (_name: string) => {},
-  clear: () => {},
-  key: (_index: number) => null,
-  length: 0,
+/** SSR / non-browser: no-op persistence until the store runs in the client */
+const noopPersistStorage: StateStorage = {
+  getItem: () => null,
+  setItem: () => undefined,
+  removeItem: () => undefined,
 };
-
-let getStorage: () => Storage = () => fallbackStorage;
-if (typeof window !== "undefined") {
-  getStorage = () => localStorage;
-}
 
 const defaultTradingSettings: TradingSettings = {
   accountBalance: 100_000,
@@ -504,8 +501,10 @@ export const useTradeStore = create<TradeStoreState>()(
         })),
     }),
     {
-      name: "trade-journal-storage",
-      storage: getStorage() as any,
+      name: TRADE_JOURNAL_PERSIST_KEY,
+      storage: createJSONStorage(() =>
+        typeof window !== "undefined" ? window.localStorage : noopPersistStorage,
+      ),
       version: 4,
       migrate: (persistedState: unknown, _fromVersion: number) => {
         const p = persistedState as Record<string, unknown> | null;

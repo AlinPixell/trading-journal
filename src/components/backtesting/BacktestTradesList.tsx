@@ -17,8 +17,9 @@ export function BacktestTradesList({
 
   return (
     <TradesTable
+      variant="xauusd"
       rows={tableRows}
-      trades={trades}
+      xauUsdTrades={trades}
       onChange={onChange}
       storageKey={XAUUSD_BACKTEST_TRADES_KEY}
       headerEyebrow="Session log"

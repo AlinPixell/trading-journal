@@ -31,6 +31,7 @@ import {
   dailyConsistencySeries,
   profitabilityHeatmap,
   profitableDaysStreak,
+  periodTargetAmount,
   periodTradingDayCount,
 } from "@/lib/analytics";
 import { formatDollarWhole } from "@/lib/utils";
@@ -63,7 +64,7 @@ export function DashboardAnalytics({
   const tradingSettings = useTradeStore(selectActiveTradingSettings);
   const profileName = useTradeStore((s) => selectActiveProfile(s).name);
   const animations = useTradeStore((s) => s.appSettings.animationsEnabled);
-  const [period, setPeriod] = useState<AnalyticsPeriod>("weekly");
+  const [period, setPeriod] = useState<AnalyticsPeriod>("monthly");
   const [anchor, setAnchor] = useState(() => new Date());
 
   useEffect(() => {
@@ -79,15 +80,17 @@ export function DashboardAnalytics({
   );
   const metrics = useMemo(() => computeDashboardMetrics(filtered), [filtered]);
 
-  const lifetimePnl = useMemo(
-    () => trades.reduce((s, t) => s + t.pnl, 0),
-    [trades],
+  const periodPnl = metrics.netPnl;
+  const periodTarget = useMemo(
+    () => periodTargetAmount(period, tradingSettings, anchor),
+    [period, tradingSettings, anchor],
   );
-  const target = tradingSettings.targetAmount;
   const progress =
-    target > 0 ? Math.min(1, Math.max(0, lifetimePnl / target)) : 0;
-  const remaining = target - lifetimePnl;
-  const positive = lifetimePnl >= 0;
+    periodTarget > 0
+      ? Math.min(1, Math.max(0, periodPnl / periodTarget))
+      : 0;
+  const remaining = periodTarget - periodPnl;
+  const positive = periodPnl >= 0;
 
   const equity = useMemo(
     () =>
@@ -149,7 +152,8 @@ export function DashboardAnalytics({
     return { value, sub };
   }, [dailyTarget, tradingDayCount, metrics.netPnl]);
 
-  const goalKpiTitle = `${periods.find((p) => p.id === period)?.label ?? "Daily"} goal`;
+  const periodLabel = periods.find((p) => p.id === period)?.label ?? "Period";
+  const goalKpiTitle = `${periodLabel} goal`;
 
   const chartColor = positive ? "var(--accent)" : "#f87171";
   const softFill = positive ? "url(#pnlGrad)" : "url(#lossGrad)";
@@ -207,43 +211,47 @@ export function DashboardAnalytics({
           <div className="flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-start sm:justify-between">
             <div>
               <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[var(--text-muted)]">
-                Target progress
+                {periodLabel} target progress
               </p>
               <p className="mt-2 text-2xl font-semibold tabular-nums sm:text-3xl lg:text-4xl">
                 <span className="tabular-nums text-white">
-                  {formatDollarWhole(lifetimePnl, { unsigned: true })}
+                  {formatDollarWhole(periodPnl, { unsigned: true })}
                 </span>
                 <span className="text-base font-medium sm:text-lg lg:text-xl">
                   <span className="text-[var(--text-muted)]"> / </span>
                   <span className="tabular-nums text-[var(--text-muted)]">
-                    {formatDollarWhole(target)}
+                    {periodTarget > 0
+                      ? formatDollarWhole(periodTarget)
+                      : "—"}
                   </span>
                 </span>
               </p>
               <p
                 className={cn(
                   "mt-2 text-sm sm:text-base",
-                  remaining > 0
-                    ? null
-                    : positive
-                      ? "text-profit/90"
-                      : "text-red-300/90",
+                  periodTarget <= 0
+                    ? "text-[var(--text-muted)]"
+                    : remaining > 0
+                      ? null
+                      : positive
+                        ? "text-profit/90"
+                        : "text-red-300/90",
                 )}
               >
-                {remaining > 0 ? (
+                {periodTarget <= 0 ? (
+                  "Set targets in profile trading settings"
+                ) : remaining > 0 ? (
                   <>
                     <span className="text-white tabular-nums">
                       {formatDollarWhole(remaining, { unsigned: true })}
                     </span>
                     <span className="text-[var(--text-muted)]">
                       {" "}
-                      remaining to target
+                      remaining to {periodLabel.toLowerCase()} target
                     </span>
                   </>
-                ) : remaining <= 0 ? (
-                  "Target exceeded"
                 ) : (
-                  "Set a target in Settings"
+                  "Target exceeded"
                 )}
               </p>
             </div>

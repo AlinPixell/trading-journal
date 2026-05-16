@@ -2,11 +2,21 @@
 
 import { useEffect } from "react";
 import { NewTradeModalProvider } from "@/components/layout/NewTradeModal";
-import { useTradeStore } from "@/store/useTradeStore";
+import { TRADE_JOURNAL_PERSIST_KEY, useTradeStore } from "@/store/useTradeStore";
 
 export function AccentRoot({ children }: { children: React.ReactNode }) {
   const accent = useTradeStore((s) => s.appSettings.accentColor);
   const theme = useTradeStore((s) => s.appSettings.theme);
+
+  useEffect(() => {
+    const onStorage = (e: StorageEvent) => {
+      if (e.key === TRADE_JOURNAL_PERSIST_KEY || e.key === null) {
+        void useTradeStore.persist.rehydrate();
+      }
+    };
+    window.addEventListener("storage", onStorage);
+    return () => window.removeEventListener("storage", onStorage);
+  }, []);
 
   useEffect(() => {
     const root = document.documentElement;

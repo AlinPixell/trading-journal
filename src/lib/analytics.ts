@@ -13,6 +13,7 @@ import {
   format,
 } from "date-fns";
 import type { Trade } from "@/types/trade";
+import type { TradingSettings } from "@/types/settings";
 import { getDateKey } from "@/lib/utils";
 import { plannedRiskReward, pnlSign } from "@/lib/tradeHelpers";
 
@@ -192,4 +193,30 @@ export function periodTradingDayCount(period: AnalyticsPeriod, anchor: Date): nu
   if (period === "weekly") return 5;
   const { start, end } = getPeriodBounds(period, anchor);
   return eachDayOfInterval({ start, end }).filter((d) => !isWeekend(d)).length;
+}
+
+/**
+ * Target P/L for the selected analytics period (for progress vs {@link filterTradesByPeriod} net P/L).
+ */
+export function periodTargetAmount(
+  period: AnalyticsPeriod,
+  settings: Pick<TradingSettings, "dailyTarget" | "monthlyTarget" | "targetAmount">,
+  anchor: Date,
+): number {
+  const { dailyTarget, monthlyTarget, targetAmount } = settings;
+  switch (period) {
+    case "daily":
+      return Math.max(0, dailyTarget);
+    case "weekly":
+      if (dailyTarget <= 0) return 0;
+      return dailyTarget * periodTradingDayCount("weekly", anchor);
+    case "monthly":
+      if (monthlyTarget > 0) return monthlyTarget;
+      if (dailyTarget <= 0) return 0;
+      return dailyTarget * periodTradingDayCount("monthly", anchor);
+    case "yearly":
+      if (targetAmount > 0) return targetAmount;
+      if (dailyTarget <= 0) return 0;
+      return dailyTarget * periodTradingDayCount("yearly", anchor);
+  }
 }

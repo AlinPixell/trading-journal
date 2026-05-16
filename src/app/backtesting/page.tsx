@@ -4,7 +4,11 @@ import { useEffect, useState } from "react";
 import { AppShell } from "@/components/layout/AppShell";
 import { BacktestTradeForm } from "@/components/backtesting/BacktestTradeForm";
 import { BacktestTradesList } from "@/components/backtesting/BacktestTradesList";
-import { loadTrades, XAUUSD_BACKTEST_TRADES_KEY } from "@/lib/xauusdTradeStorage";
+import {
+  loadTrades,
+  subscribeXauUsdTradesKey,
+  XAUUSD_BACKTEST_TRADES_KEY,
+} from "@/lib/xauusdTradeStorage";
 import type { XauUsdTrade } from "@/types/xauusd";
 
 export default function BacktestingPage() {
@@ -12,15 +16,13 @@ export default function BacktestingPage() {
     loadTrades(XAUUSD_BACKTEST_TRADES_KEY),
   );
 
-  useEffect(() => {
-    const onStorage = (e: StorageEvent) => {
-      if (e.key === XAUUSD_BACKTEST_TRADES_KEY || e.key === null) {
-        setTrades(loadTrades(XAUUSD_BACKTEST_TRADES_KEY));
-      }
-    };
-    window.addEventListener("storage", onStorage);
-    return () => window.removeEventListener("storage", onStorage);
-  }, []);
+  useEffect(
+    () =>
+      subscribeXauUsdTradesKey(XAUUSD_BACKTEST_TRADES_KEY, () =>
+        setTrades(loadTrades(XAUUSD_BACKTEST_TRADES_KEY)),
+      ),
+    [],
+  );
 
   const refresh = () => setTrades(loadTrades(XAUUSD_BACKTEST_TRADES_KEY));
 

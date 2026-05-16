@@ -4,6 +4,9 @@ export const XAUUSD_TRADES_KEY = "xauusd-trades";
 export const XAUUSD_BACKTEST_TRADES_KEY = "xauusd-backtest-trades";
 export const XAUUSD_ANALYSIS_KEY = "xauusd-analysis";
 
+/** Same-tab sync: `storage` events only fire in other windows */
+export const XAUUSD_TRADES_WRITE_EVENT = "tj:xauusd-trades-write";
+
 function normalizeDirection(raw: unknown): XauUsdTradeDirection {
   if (raw === "BUY" || raw === "SELL") return raw;
   if (raw === "LONG") return "BUY";
@@ -95,6 +98,32 @@ export function loadTrades(key: string): XauUsdTrade[] {
 export function saveTrades(key: string, trades: XauUsdTrade[]) {
   if (typeof window === "undefined") return;
   window.localStorage.setItem(key, JSON.stringify(trades));
+  window.dispatchEvent(
+    new CustomEvent<{ key: string }>(XAUUSD_TRADES_WRITE_EVENT, { detail: { key } }),
+  );
+}
+
+/** Reload when this key changes (another tab via `storage`, same tab via {@link saveTrades} event). */
+export function subscribeXauUsdTradesKey(key: string, onChange: () => void) {
+  if (typeof window === "undefined") return () => undefined;
+
+  const run = () => onChange();
+
+  const onStorage = (e: StorageEvent) => {
+    if (e.key === key || e.key === null) run();
+  };
+
+  const onLocalWrite: EventListener = (e) => {
+    const k = (e as CustomEvent<{ key?: string }>).detail?.key;
+    if (k === key) run();
+  };
+
+  window.addEventListener("storage", onStorage);
+  window.addEventListener(XAUUSD_TRADES_WRITE_EVENT, onLocalWrite);
+  return () => {
+    window.removeEventListener("storage", onStorage);
+    window.removeEventListener(XAUUSD_TRADES_WRITE_EVENT, onLocalWrite);
+  };
 }
 
 function normalizeAnalysisEntry(raw: unknown): XauUsdAnalysisEntry | null {

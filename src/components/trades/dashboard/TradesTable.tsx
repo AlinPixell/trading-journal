@@ -4,42 +4,69 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { useTradeStore } from "@/store/useTradeStore";
 import { cn } from "@/lib/cn";
-import { loadTrades, saveTrades, XAUUSD_TRADES_KEY } from "@/lib/xauusdTradeStorage";
+import { loadTrades, saveTrades } from "@/lib/xauusdTradeStorage";
 import type { TradeTableRow } from "@/lib/tradesDashboardModel";
 import type { XauUsdTrade } from "@/types/xauusd";
+import type { Trade } from "@/types/trade";
 import { formatDollar } from "@/lib/utils";
 import { XauUsdTradeDetailsModal } from "@/components/trades/dashboard/XauUsdTradeDetailsModal";
+import { TradeDetailsModal } from "@/components/trade/TradeDetailsModal";
 
-type TradesTableProps = {
-  rows: TradeTableRow[];
-  trades: XauUsdTrade[];
-  onChange: () => void;
-  storageKey?: string;
+type HeaderProps = {
   headerEyebrow?: string;
   headerTitle?: string;
   headerDescription?: string;
   emptyMessage?: string;
 };
 
-export function TradesTable({
-  rows,
-  trades,
-  onChange,
-  storageKey = XAUUSD_TRADES_KEY,
-  headerEyebrow = "Trade log",
-  headerTitle = "All positions",
-  headerDescription = "Tap a row for notes, screenshots, and more.",
-  emptyMessage = "No trades logged yet — add trades to see them here.",
-}: TradesTableProps) {
+type TradesTableXauUsdProps = HeaderProps & {
+  variant: "xauusd";
+  rows: TradeTableRow[];
+  xauUsdTrades: XauUsdTrade[];
+  storageKey: string;
+  onChange: () => void;
+};
+
+type TradesTableJournalProps = HeaderProps & {
+  variant: "journal";
+  rows: TradeTableRow[];
+  journalTrades: Trade[];
+};
+
+export type TradesTableProps = TradesTableXauUsdProps | TradesTableJournalProps;
+
+export function TradesTable(props: TradesTableProps) {
   const animations = useTradeStore((s) => s.appSettings.animationsEnabled);
+  const deleteTrade = useTradeStore((s) => s.deleteTrade);
   const [detailId, setDetailId] = useState<string | null>(null);
 
-  const detailTrade = detailId ? trades.find((t) => t.id === detailId) ?? null : null;
+  const {
+    rows,
+    headerEyebrow = "Trade log",
+    headerTitle = "All positions",
+    headerDescription = "Tap a row for notes, screenshots, and more.",
+    emptyMessage = "No trades logged yet — add trades to see them here.",
+  } = props;
+
+  const detailXauUsd =
+    props.variant === "xauusd" && detailId
+      ? (props.xauUsdTrades.find((t) => t.id === detailId) ?? null)
+      : null;
+
+  const detailJournal =
+    props.variant === "journal" && detailId
+      ? (props.journalTrades.find((t) => t.id === detailId) ?? null)
+      : null;
 
   const remove = (id: string) => {
-    const next = loadTrades(storageKey).filter((t) => t.id !== id);
-    saveTrades(storageKey, next);
-    onChange();
+    if (props.variant === "xauusd") {
+      const next = loadTrades(props.storageKey).filter((t) => t.id !== id);
+      saveTrades(props.storageKey, next);
+      props.onChange();
+    } else {
+      deleteTrade(id);
+      setDetailId((cur) => (cur === id ? null : cur));
+    }
   };
 
   return (
@@ -195,16 +222,25 @@ export function TradesTable({
         </div>
       </div>
 
-      <XauUsdTradeDetailsModal
-        trade={detailTrade}
-        open={detailId != null && detailTrade != null}
-        storageKey={storageKey}
-        onClose={() => setDetailId(null)}
-        onDeleted={() => {
-          setDetailId(null);
-          onChange();
-        }}
-      />
+      {props.variant === "xauusd" ? (
+        <XauUsdTradeDetailsModal
+          trade={detailXauUsd}
+          open={detailId != null && detailXauUsd != null}
+          storageKey={props.storageKey}
+          onClose={() => setDetailId(null)}
+          onDeleted={() => {
+            setDetailId(null);
+            props.onChange();
+          }}
+        />
+      ) : (
+        <TradeDetailsModal
+          trade={detailJournal}
+          open={detailId != null && detailJournal != null}
+          onClose={() => setDetailId(null)}
+          onDeleted={() => setDetailId(null)}
+        />
+      )}
     </>
   );
 }
