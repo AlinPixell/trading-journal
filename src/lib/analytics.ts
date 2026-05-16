@@ -9,6 +9,7 @@ import {
   endOfYear,
   eachDayOfInterval,
   isWithinInterval,
+  isWeekend,
   format,
 } from "date-fns";
 import type { Trade } from "@/types/trade";
@@ -180,4 +181,15 @@ export function winStreak(trades: Trade[]): number {
     else break;
   }
   return streak;
+}
+
+/**
+ * Trading days for scaling daily target: 1 for a single day, 5 per week, otherwise Mon–Fri
+ * in the selected month or year (weekends excluded).
+ */
+export function periodTradingDayCount(period: AnalyticsPeriod, anchor: Date): number {
+  if (period === "daily") return 1;
+  if (period === "weekly") return 5;
+  const { start, end } = getPeriodBounds(period, anchor);
+  return eachDayOfInterval({ start, end }).filter((d) => !isWeekend(d)).length;
 }

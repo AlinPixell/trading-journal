@@ -1,6 +1,8 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import {
   Area,
   AreaChart,
@@ -31,9 +33,9 @@ import {
   dailyConsistencySeries,
   profitabilityHeatmap,
   profitableDaysStreak,
-  winStreak,
+  periodTradingDayCount,
 } from "@/lib/analytics";
-import { formatDollar } from "@/lib/utils";
+import { formatDollarWhole } from "@/lib/utils";
 import { cn } from "@/lib/cn";
 
 const periods: { id: AnalyticsPeriod; label: string }[] = [
@@ -42,6 +44,12 @@ const periods: { id: AnalyticsPeriod; label: string }[] = [
   { id: "monthly", label: "Monthly" },
   { id: "yearly", label: "Yearly" },
 ];
+
+const workspaceLinks = [
+  { href: "/trades", label: "Trades" },
+  { href: "/backtesting", label: "Backtesting" },
+  { href: "/analysis", label: "Analysis" },
+] as const;
 
 const dashboardMainChartFrameClass = "mt-4 h-54 min-h-54 w-full min-w-0";
 
@@ -59,11 +67,12 @@ export type DashboardAnalyticsProps = {
 export function DashboardAnalytics({
   initialDayKey,
 }: DashboardAnalyticsProps = {}) {
+  const pathname = usePathname();
   const trades = useTradeStore(selectActiveTrades);
   const tradingSettings = useTradeStore(selectActiveTradingSettings);
   const profileName = useTradeStore((s) => selectActiveProfile(s).name);
   const animations = useTradeStore((s) => s.appSettings.animationsEnabled);
-  const [period, setPeriod] = useState<AnalyticsPeriod>("monthly");
+  const [period, setPeriod] = useState<AnalyticsPeriod>("weekly");
   const [anchor, setAnchor] = useState(() => new Date());
 
   useEffect(() => {
@@ -112,7 +121,44 @@ export function DashboardAnalytics({
   );
 
   const streakDays = useMemo(() => profitableDaysStreak(trades), [trades]);
-  const streakWins = useMemo(() => winStreak(trades), [trades]);
+
+  const dailyTarget = tradingSettings.dailyTarget;
+  const tradingDayCount = useMemo(
+    () => periodTradingDayCount(period, anchor),
+    [period, anchor],
+  );
+
+  const dailyGoalKpi = useMemo(() => {
+    if (dailyTarget <= 0) {
+      return {
+        value: "—",
+        sub: "Set daily target in profile trading settings",
+      };
+    }
+    const goalTotal = dailyTarget * tradingDayCount;
+    const actual = metrics.netPnl;
+    const value = formatDollarWhole(goalTotal);
+
+    if (actual >= goalTotal - 1e-6) {
+      const over = Math.max(0, actual - goalTotal);
+      const sub = (
+        <p className="mt-1 text-xs font-medium text-profit/90">
+          Over {formatDollarWhole(over)}
+        </p>
+      );
+      return { value, sub };
+    }
+
+    const left = goalTotal - actual;
+    const sub = (
+      <p className="mt-1 text-xs font-medium text-red-300/90">
+        Left {formatDollarWhole(left)}
+      </p>
+    );
+    return { value, sub };
+  }, [dailyTarget, tradingDayCount, metrics.netPnl]);
+
+  const goalKpiTitle = `${periods.find((p) => p.id === period)?.label ?? "Daily"} goal`;
 
   const chartColor = positive ? "var(--accent)" : "#f87171";
   const softFill = positive ? "url(#pnlGrad)" : "url(#lossGrad)";
@@ -158,6 +204,28 @@ export function DashboardAnalytics({
               ))}
             </div>
           </div>
+          <div className="-mx-1 overflow-x-auto pb-0.5 [-ms-overflow-style:none] [scrollbar-width:none] sm:mx-0 sm:overflow-visible [&::-webkit-scrollbar]:hidden">
+            <div className="inline-flex shrink-0 gap-1 rounded-md border border-[var(--border-soft)] bg-[var(--bg-cell)] p-1">
+              {workspaceLinks.map(({ href, label }) => {
+                const active =
+                  pathname === href || pathname.startsWith(`${href}/`);
+                return (
+                  <Link
+                    key={href}
+                    href={href}
+                    className={cn(
+                      "inline-flex min-h-10 items-center rounded px-3 py-2 text-xs font-semibold transition sm:min-h-0",
+                      active
+                        ? "bg-[var(--fx-11)] text-[var(--text-primary)] shadow-[inset_0_0_0_1px_var(--border-soft)]"
+                        : "text-[var(--text-muted)] hover:text-[var(--text-secondary)]",
+                    )}
+                  >
+                    {label}
+                  </Link>
+                );
+              })}
+            </div>
+          </div>
         </div>
       </header>
 
@@ -172,25 +240,42 @@ export function DashboardAnalytics({
               <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[var(--text-muted)]">
                 Target progress
               </p>
-              <p className="mt-2 text-2xl font-semibold tabular-nums text-[var(--text-primary)] sm:text-3xl lg:text-4xl">
-                {lifetimePnl >= 0 ? "+" : ""}
-                {formatDollar(lifetimePnl)}
-                <span className="text-base font-medium text-[var(--text-muted)] sm:text-lg lg:text-xl">
-                  {" "}
-                  / {formatDollar(target)}
+              <p className="mt-2 text-2xl font-semibold tabular-nums sm:text-3xl lg:text-4xl">
+                <span className="tabular-nums text-white">
+                  {formatDollarWhole(lifetimePnl, { unsigned: true })}
+                </span>
+                <span className="text-base font-medium sm:text-lg lg:text-xl">
+                  <span className="text-[var(--text-muted)]"> / </span>
+                  <span className="tabular-nums text-[var(--text-muted)]">
+                    {formatDollarWhole(target)}
+                  </span>
                 </span>
               </p>
               <p
                 className={cn(
                   "mt-2 text-sm sm:text-base",
-                  positive ? "text-emerald-300/90" : "text-red-300/90",
+                  remaining > 0
+                    ? null
+                    : positive
+                      ? "text-profit/90"
+                      : "text-red-300/90",
                 )}
               >
-                {remaining > 0
-                  ? `${formatDollar(remaining)} remaining to target`
-                  : remaining <= 0
-                    ? "Target exceeded"
-                    : "Set a target in Settings"}
+                {remaining > 0 ? (
+                  <>
+                    <span className="text-white tabular-nums">
+                      {formatDollarWhole(remaining, { unsigned: true })}
+                    </span>
+                    <span className="text-[var(--text-muted)]">
+                      {" "}
+                      remaining to target
+                    </span>
+                  </>
+                ) : remaining <= 0 ? (
+                  "Target exceeded"
+                ) : (
+                  "Set a target in Settings"
+                )}
               </p>
             </div>
             <div className="flex shrink-0 self-center sm:self-start">
@@ -238,9 +323,9 @@ export function DashboardAnalytics({
       {/* KPI grid */}
       <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <Kpi
-          title="Win streak"
-          value={String(streakWins)}
-          sub="last consecutive wins"
+          title={goalKpiTitle}
+          value={dailyGoalKpi.value}
+          sub={dailyGoalKpi.sub}
           animations={animations}
         />
         <Kpi
@@ -345,6 +430,10 @@ export function DashboardAnalytics({
                   width={36}
                 />
                 <Tooltip
+                  formatter={(value) => [
+                    formatDollarWhole(Number(value), { unsigned: true }),
+                    "P/L",
+                  ]}
                   contentStyle={{
                     background: "var(--chart-tooltip-bg)",
                     border: "1px solid var(--chart-tooltip-border)",
@@ -363,7 +452,7 @@ export function DashboardAnalytics({
                       key={i}
                       fill={
                         e.pnl >= 0
-                          ? "color-mix(in srgb,var(--accent) 70%, #34d399)"
+                          ? "color-mix(in lab,var(--accent) 70%, var(--profit))"
                           : "#f87171"
                       }
                     />
@@ -383,31 +472,84 @@ export function DashboardAnalytics({
           <ul className="mt-4 space-y-3 text-sm text-[var(--text-secondary)]">
             <Row
               label="Total profit"
-              value={formatDollar(metrics.totalProfit)}
+              value={formatDollarWhole(metrics.totalProfit)}
             />
-            <Row label="Total loss" value={formatDollar(metrics.totalLoss)} />
+            <Row
+              label="Total loss"
+              value={formatDollarWhole(metrics.totalLoss)}
+            />
             <Row
               label="Avg daily profit"
               value={
-                metrics.avgDailyProfit != null
-                  ? formatDollar(metrics.avgDailyProfit)
-                  : "—"
+                metrics.avgDailyProfit != null ? (
+                  <span
+                    className={cn(
+                      metrics.avgDailyProfit > 0
+                        ? "text-profit/95"
+                        : metrics.avgDailyProfit < 0
+                          ? "text-red-300/90"
+                          : "text-[var(--text-primary)]",
+                    )}
+                  >
+                    {formatDollarWhole(metrics.avgDailyProfit, {
+                      unsigned: true,
+                    })}
+                  </span>
+                ) : (
+                  "—"
+                )
               }
             />
             <Row
               label="Best day"
               value={
-                metrics.bestDay
-                  ? `${metrics.bestDay.key} (${formatDollar(metrics.bestDay.pnl)})`
-                  : "—"
+                metrics.bestDay ? (
+                  <>
+                    {metrics.bestDay.key} (
+                    <span
+                      className={cn(
+                        metrics.bestDay.pnl > 0
+                          ? "text-profit/95"
+                          : metrics.bestDay.pnl < 0
+                            ? "text-red-300/90"
+                            : "text-[var(--text-primary)]",
+                      )}
+                    >
+                      {formatDollarWhole(metrics.bestDay.pnl, {
+                        unsigned: true,
+                      })}
+                    </span>
+                    )
+                  </>
+                ) : (
+                  "—"
+                )
               }
             />
             <Row
               label="Worst day"
               value={
-                metrics.worstDay
-                  ? `${metrics.worstDay.key} (${formatDollar(metrics.worstDay.pnl)})`
-                  : "—"
+                metrics.worstDay ? (
+                  <>
+                    {metrics.worstDay.key} (
+                    <span
+                      className={cn(
+                        metrics.worstDay.pnl > 0
+                          ? "text-profit/95"
+                          : metrics.worstDay.pnl < 0
+                            ? "text-red-300/90"
+                            : "text-[var(--text-primary)]",
+                      )}
+                    >
+                      {formatDollarWhole(metrics.worstDay.pnl, {
+                        unsigned: true,
+                      })}
+                    </span>
+                    )
+                  </>
+                ) : (
+                  "—"
+                )
               }
             />
           </ul>
@@ -422,14 +564,14 @@ export function DashboardAnalytics({
               {heatmap.map((c) => (
                 <div
                   key={c.key}
-                  title={`${c.key}: ${formatDollar(c.pnl)}`}
+                  title={`${c.key}: ${formatDollarWhole(c.pnl, { unsigned: true })}`}
                   className="h-2.5 w-2.5 rounded-sm"
                   style={{
                     background:
                       c.pnl === 0
                         ? "var(--chart-heatmap-zero)"
                         : c.pnl > 0
-                          ? `color-mix(in srgb, var(--accent) ${28 + c.intensity * 55}%, transparent)`
+                          ? `color-mix(in lab, var(--profit) ${28 + c.intensity * 55}%, transparent)`
                           : `color-mix(in srgb, #f87171 ${22 + c.intensity * 50}%, transparent)`,
                   }}
                 />
@@ -440,14 +582,14 @@ export function DashboardAnalytics({
       </section>
 
       <section className="rounded-md border border-[var(--border)] border-dashed bg-[var(--bg-cell)] px-4 py-8 text-center text-sm text-[var(--text-muted)] sm:p-10">
-        Daily target {formatDollar(tradingSettings.dailyTarget)} · Monthly{" "}
-        {formatDollar(tradingSettings.monthlyTarget)}
+        Daily target {formatDollarWhole(tradingSettings.dailyTarget)} · Monthly{" "}
+        {formatDollarWhole(tradingSettings.monthlyTarget)}
       </section>
     </div>
   );
 }
 
-function Row({ label, value }: { label: string; value: string }) {
+function Row({ label, value }: { label: string; value: ReactNode }) {
   return (
     <li className="flex flex-col gap-1 border-b border-[var(--border-soft)] pb-3 last:border-0 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
       <span>{label}</span>
@@ -471,7 +613,7 @@ function PeriodSnapshotCard({
   losingTrades: number;
   netPnl: number;
 }) {
-  const netStr = `${netPnl >= 0 ? "+" : ""}${formatDollar(netPnl)}`;
+  const netStr = formatDollarWhole(netPnl, { unsigned: true });
   return (
     <motion.div
       layout={animations}
@@ -499,7 +641,7 @@ function PeriodSnapshotCard({
               className={cn(
                 "mt-1 text-xl font-semibold tabular-nums sm:text-2xl",
                 netPnl > 0
-                  ? "text-emerald-300/95"
+                  ? "text-profit/95"
                   : netPnl < 0
                     ? "text-red-300/90"
                     : "text-[var(--text-primary)]",
@@ -587,8 +729,8 @@ function Kpi({
   animations,
 }: {
   title: string;
-  value: string;
-  sub?: string;
+  value: ReactNode;
+  sub?: ReactNode;
   spark?: { t: string; equity: number }[];
   dataKey?: string;
   animations: boolean;
@@ -606,7 +748,7 @@ function Kpi({
         {value}
       </p>
       {sub ? (
-        <p className="mt-1 text-xs text-[var(--text-secondary)] ">{sub}</p>
+        <div className="mt-1 text-xs text-[var(--text-secondary)]">{sub}</div>
       ) : null}
       {spark && spark.length > 1 && dataKey ? (
         <div className="mt-3 h-12 w-full min-h-[48px] min-w-0">

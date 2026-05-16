@@ -63,7 +63,7 @@ export function NewTradeModalProvider({
               className={cn(
                 "fixed z-50 flex min-h-0 flex-col overflow-hidden bg-[color-mix(in_srgb,var(--bg-raised)_82%,transparent)] shadow-[0_40px_120px_rgba(0,0,0,0.55)] backdrop-blur-2xl focus:outline-none",
                 "bottom-0 left-0 right-0 top-auto h-[min(92dvh,calc(100dvh-env(safe-area-inset-top,0px)-env(safe-area-inset-bottom,0px)-16px))] w-full translate-x-0 translate-y-0 rounded-t-2xl rounded-b-none border-x-0 border-b-0 border-t border-[var(--border)] p-5 pb-[calc(1.25rem+env(safe-area-inset-bottom,0px))]",
-                "sm:bottom-auto sm:left-1/2 sm:top-1/2 sm:h-[min(83vh,1320px)] sm:w-[min(96vw,480px)] sm:-translate-x-1/2 sm:-translate-y-1/2 sm:rounded-md sm:border sm:border-[var(--border)] sm:p-6 sm:pb-6",
+                "sm:bottom-auto sm:left-1/2 sm:top-1/2 sm:h-[min(84vh,1320px)] sm:w-[min(96vw,480px)] sm:-translate-x-1/2 sm:-translate-y-1/2 sm:rounded-md sm:border sm:border-[var(--border)] sm:p-6 sm:pb-6",
               )}
               initial={animations ? { opacity: 0, scale: 0.96, y: 12 } : false}
               animate={animations ? { opacity: 1, scale: 1, y: 0 } : {}}

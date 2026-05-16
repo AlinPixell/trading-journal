@@ -3,7 +3,7 @@ import type { TradeStatus } from "@/types/trade";
 const statusMap: Record<TradeStatus, { label: string; className: string }> = {
   win: {
     label: "Win",
-    className: "bg-emerald-500/10 text-emerald-300 ring-1 ring-emerald-500/20",
+    className: "bg-profit/10 text-profit ring-1 ring-profit/20",
   },
   loss: {
     label: "Loss",
@@ -11,11 +11,18 @@ const statusMap: Record<TradeStatus, { label: string; className: string }> = {
   },
   breakeven: {
     label: "Break-even",
-    className: "bg-[var(--fx-07)] text-[var(--text-secondary)] ring-1 ring-[var(--border-soft)]",
+    className:
+      "bg-[var(--fx-07)] text-[var(--text-secondary)] ring-1 ring-[var(--border-soft)]",
   },
 };
 
 export default function StatusBadge({ status }: { status: TradeStatus }) {
   const info = statusMap[status];
-  return <span className={`inline-flex rounded-sm px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] ${info.className}`}>{info.label}</span>;
+  return (
+    <span
+      className={`inline-flex rounded-sm px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] ${info.className}`}
+    >
+      {info.label}
+    </span>
+  );
 }

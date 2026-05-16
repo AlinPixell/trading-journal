@@ -5,7 +5,7 @@ import type { Trade } from "@/types/trade";
 import { formatDollar } from "@/lib/utils";
 import { cn } from "@/lib/cn";
 
-/** Plain text row: BUY green / SELL red, optional pair white, P/L blue if win else red */
+/** Plain text row: BUY profit hue / SELL red, optional pair white, P/L blue if win else red */
 export function TradeEventChip({
   trade,
   onClick,
@@ -38,13 +38,13 @@ export function TradeEventChip({
         compact
           ? "truncate font-normal leading-none"
           : "rounded-md px-2 py-3 text-[10px] font-medium leading-snug sm:py-2 sm:text-[11px]",
-        className
+        className,
       )}
     >
       <span
         className={cn(
-          buy ? "text-emerald-400" : "text-red-400",
-          compact ? "text-[7px] sm:text-[8px]" : ""
+          buy ? "text-profit" : "text-red-400",
+          compact ? "text-[7px] sm:text-[8px]" : "",
         )}
       >
         {trade.direction}
@@ -53,7 +53,7 @@ export function TradeEventChip({
         <span
           className={cn(
             "text-[var(--text-primary)]",
-            compact ? "text-[7px] sm:text-[8px]" : ""
+            compact ? "text-[7px] sm:text-[8px]" : "",
           )}
         >
           {" "}
@@ -62,19 +62,13 @@ export function TradeEventChip({
       ) : (
         " "
       )}
-      <span
-        className={cn(
-          pnlClass,
-          compact ? "text-[7px] sm:text-[8px]" : ""
-        )}
-      >
-        {trade.pnl >= 0 ? "+" : ""}
-        {formatDollar(trade.pnl)}
+      <span className={cn(pnlClass, compact ? "text-[7px] sm:text-[8px]" : "")}>
+        {formatDollar(trade.pnl, { unsigned: true })}
       </span>
       <span
         className={cn(
           "text-[var(--text-muted)]",
-          compact ? "text-[8px] sm:text-[9px]" : ""
+          compact ? "text-[8px] sm:text-[9px]" : "",
         )}
       >
         {" · "}

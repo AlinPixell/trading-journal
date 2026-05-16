@@ -1,6 +1,13 @@
 "use client";
 
-import { useState, useEffect, useMemo, type Dispatch, type SetStateAction } from "react";
+import {
+  useState,
+  useEffect,
+  useMemo,
+  useCallback,
+  type Dispatch,
+  type SetStateAction,
+} from "react";
 import { useRouter } from "next/navigation";
 import { format } from "date-fns";
 import {
@@ -8,13 +15,26 @@ import {
   selectActiveTradingSettings,
   useTradeStore,
 } from "@/store/useTradeStore";
-import { createTradeFromProfitOnly, isoFromLocalDatePreservingNowTime, tradesForDateKey } from "@/lib/tradeHelpers";
+import {
+  createTradeFromProfitOnly,
+  isoFromLocalDatePreservingNowTime,
+  tradesForDateKey,
+} from "@/lib/tradeHelpers";
 import { formatDollar } from "@/lib/utils";
 import { cn } from "@/lib/cn";
 import type { TradeDirection } from "@/types/trade";
+import { Plus } from "lucide-react";
+
+/** Quick log on full `/new` page — many fills in one save. */
+const MAX_QUICK_BATCH_PAGE = 10;
+/** Log trade modal — up to 3 quick rows; use + for full editor. */
+const MAX_QUICK_BATCH_MODAL = 3;
 
 function newId() {
-  if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
+  if (
+    typeof crypto !== "undefined" &&
+    typeof crypto.randomUUID === "function"
+  ) {
     return crypto.randomUUID();
   }
   return `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
@@ -31,124 +51,157 @@ export type QuickProfitFormProps = {
 type QuickProfitCardFieldsProps = {
   tradeDate: string;
   setTradeDate: (v: string) => void;
-  maxNew: number;
   existingOnDay: number;
-  allowedCounts: number[];
+  batchCountOptions: number[];
   tradeCount: number;
   setTradeCount: (n: number) => void;
   rows: Row[];
   setRows: Dispatch<SetStateAction<Row[]>>;
   previewRoi: number | null;
-  totalPnl: number;
   accountBalance: number;
+  showFullTradeEditor?: boolean;
+  onOpenFullTradeEditor?: () => void;
 };
 
 function QuickProfitCardFields({
   tradeDate,
   setTradeDate,
-  maxNew,
   existingOnDay,
-  allowedCounts,
+  batchCountOptions,
   tradeCount,
   setTradeCount,
   rows,
   setRows,
   previewRoi,
-  totalPnl,
   accountBalance,
+  showFullTradeEditor,
+  onOpenFullTradeEditor,
 }: QuickProfitCardFieldsProps) {
   return (
     <>
-      <label className="block text-sm font-medium text-[var(--text-secondary)]">Trade date</label>
+      <label className="block text-sm font-medium text-[var(--text-secondary)]">
+        Trade date
+      </label>
       <input
         type="date"
         value={tradeDate}
         onChange={(e) => setTradeDate(e.target.value)}
         className="mt-2 w-full rounded-md border border-[var(--border-soft)] bg-[var(--bg-base)] px-4 py-2.5 text-base text-[var(--text-primary)] outline-none focus:border-[color-mix(in_srgb,var(--accent)_45%,transparent)] sm:text-sm"
       />
-      {maxNew === 0 ? (
-        <p className="mt-4 text-sm text-amber-200/90">
-          This day already has 3 trades. Choose another date or edit an existing trade.
-        </p>
-      ) : (
-        <>
-          <p className="mt-4 text-xs text-[var(--text-muted)]">
-            {existingOnDay} on this day · {maxNew} slot{maxNew === 1 ? "" : "s"} left
-          </p>
+      <p className="mt-4 text-xs text-[var(--text-muted)]">
+        {existingOnDay} already logged on this date
+      </p>
 
-          <p className="mt-4 text-sm font-medium text-[var(--text-secondary)]">Number of trades</p>
-          <div className="mt-2 flex flex-wrap gap-2">
-            {allowedCounts.map((n) => (
-              <button
-                key={n}
-                type="button"
-                onClick={() => {
-                  setTradeCount(n);
-                }}
-                className={cn(
-                  "rounded-md border px-4 py-2 text-sm font-semibold transition",
-                  tradeCount === n
-                    ? "border-[var(--accent)] bg-[color-mix(in_srgb,var(--accent)_18%,transparent)] text-[var(--text-primary)]"
-                    : "border-[var(--border-soft)] bg-[var(--fx-04)] text-[var(--text-secondary)]"
-                )}
-              >
-                {n}
-              </button>
-            ))}
-          </div>
+      <p className="mt-4 text-sm font-medium text-[var(--text-secondary)]">
+        Number of trades
+      </p>
+      <div className="mt-2 flex flex-wrap gap-2">
+        {batchCountOptions.map((n) => (
+          <button
+            key={n}
+            type="button"
+            onClick={() => {
+              setTradeCount(n);
+            }}
+            className={cn(
+              "rounded-md border px-4 py-2 text-sm font-semibold transition",
+              tradeCount === n
+                ? "border-[var(--accent)] bg-[color-mix(in_srgb,var(--accent)_18%,transparent)] text-[var(--text-primary)]"
+                : "border-[var(--border-soft)] bg-[var(--fx-04)] text-[var(--text-secondary)]",
+            )}
+          >
+            {n}
+          </button>
+        ))}
+        {showFullTradeEditor && onOpenFullTradeEditor ? (
+          <button
+            type="button"
+            onClick={onOpenFullTradeEditor}
+            className="flex min-h-[42px] min-w-[42px] items-center justify-center rounded-md border border-dashed border-[var(--border-soft)] bg-[var(--fx-04)] text-[var(--text-secondary)] transition hover:border-[color-mix(in_srgb,var(--accent)_45%,transparent)] hover:text-[var(--text-primary)]"
+            aria-label="Open full trade form with more fields"
+            title="Full trade form"
+          >
+            <Plus className="h-4 w-4" strokeWidth={2.5} />
+          </button>
+        ) : null}
+      </div>
 
-          <div className="mt-6 space-y-5">
-            {rows.map((row, index) => (
-              <div
-                key={index}
-                className="rounded-md border border-[var(--border-soft)] bg-[var(--bg-base)]/80 p-4"
-              >
-                <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--text-muted)]">
-                  Trade {index + 1}
-                </p>
-                <p className="mt-3 text-sm font-medium text-[var(--text-secondary)]">Side</p>
-                <div className="mt-2 flex gap-2">
-                  {(["BUY", "SELL"] as const).map((d) => (
-                    <button
-                      key={d}
-                      type="button"
-                      onClick={() => setRows((r) => r.map((x, j) => (j === index ? { ...x, direction: d } : x)))}
-                      className={cn(
-                        "flex-1 rounded-md border py-2.5 text-sm font-semibold transition",
-                        row.direction === d
-                          ? d === "BUY"
-                            ? "border-emerald-500/40 bg-emerald-500/15 text-emerald-300"
-                            : "border-red-400/35 bg-red-500/12 text-red-300"
-                          : "border-[var(--border-soft)] bg-[var(--fx-04)] text-[var(--text-muted)]"
-                      )}
-                    >
-                      {d}
-                    </button>
-                  ))}
-                </div>
-                <label className="mt-4 block text-sm font-medium text-[var(--text-secondary)]">P/L ($)</label>
-                <input
-                  type="text"
-                  inputMode="decimal"
-                  placeholder="e.g. 420 or -185"
-                  value={row.profit}
-                  onChange={(e) =>
-                    setRows((r) => r.map((x, j) => (j === index ? { ...x, profit: e.target.value } : x)))
-                  }
-                  className="mt-2 w-full rounded-md border border-[var(--border-soft)] bg-[var(--bg-base)] px-4 py-3 text-base font-semibold tabular-nums text-[var(--text-primary)] outline-none focus:border-[color-mix(in_srgb,var(--accent)_45%,transparent)]"
-                />
-              </div>
-            ))}
-          </div>
-
-          {previewRoi != null ? (
-            <p className="mt-4 text-sm text-[var(--text-muted)]">
-              Combined ≈ {totalPnl >= 0 ? "+" : ""}
-              {previewRoi.toFixed(2)}% on balance ({formatDollar(accountBalance)})
+      <div className="mt-6 space-y-5">
+        {rows.map((row, index) => (
+          <div
+            key={index}
+            className="rounded-md border border-[var(--border-soft)] bg-[var(--bg-base)]/80 p-4"
+          >
+            <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--text-muted)]">
+              Trade {index + 1}
             </p>
-          ) : null}
-        </>
-      )}
+            <p className="mt-3 text-sm font-medium text-[var(--text-secondary)]">
+              Side
+            </p>
+            <div className="mt-2 flex gap-2">
+              {(["BUY", "SELL"] as const).map((d) => (
+                <button
+                  key={d}
+                  type="button"
+                  onClick={() =>
+                    setRows((r) =>
+                      r.map((x, j) =>
+                        j === index ? { ...x, direction: d } : x,
+                      ),
+                    )
+                  }
+                  className={cn(
+                    "flex-1 rounded-md border py-2.5 text-sm font-semibold transition",
+                    row.direction === d
+                      ? d === "BUY"
+                        ? "border-profit/40 bg-profit/15 text-profit"
+                        : "border-red-400/35 bg-red-500/12 text-red-300"
+                      : "border-[var(--border-soft)] bg-[var(--fx-04)] text-[var(--text-muted)]",
+                  )}
+                >
+                  {d}
+                </button>
+              ))}
+            </div>
+            <label className="mt-4 block text-sm font-medium text-[var(--text-secondary)]">
+              P/L ($)
+            </label>
+            <input
+              type="text"
+              inputMode="decimal"
+              placeholder="e.g. 420 or -185"
+              value={row.profit}
+              onChange={(e) =>
+                setRows((r) =>
+                  r.map((x, j) =>
+                    j === index ? { ...x, profit: e.target.value } : x,
+                  ),
+                )
+              }
+              className="mt-2 w-full rounded-md border border-[var(--border-soft)] bg-[var(--bg-base)] px-4 py-3 text-base font-semibold tabular-nums text-[var(--text-primary)] outline-none focus:border-[color-mix(in_srgb,var(--accent)_45%,transparent)]"
+            />
+          </div>
+        ))}
+      </div>
+
+      {previewRoi != null ? (
+        <p className="mt-4 text-sm text-[var(--text-muted)]">
+          Combined ≈{" "}
+          <span
+            className={cn(
+              "font-medium tabular-nums",
+              previewRoi > 0
+                ? "text-profit"
+                : previewRoi < 0
+                  ? "text-red-300/90"
+                  : "text-[var(--text-secondary)]",
+            )}
+          >
+            {Math.abs(previewRoi).toFixed(2)}%
+          </span>{" "}
+          on balance ({formatDollar(accountBalance)})
+        </p>
+      ) : null}
     </>
   );
 }
@@ -158,12 +211,22 @@ export function QuickProfitForm({
   onRequestClose,
   onSaved,
 }: QuickProfitFormProps) {
-  const router = useRouter();
   const isModal = presentation === "modal";
+  const maxBatch = isModal ? MAX_QUICK_BATCH_MODAL : MAX_QUICK_BATCH_PAGE;
+  const batchCountOptions = useMemo(
+    () => Array.from({ length: maxBatch }, (_, i) => i + 1),
+    [maxBatch],
+  );
+
+  const router = useRouter();
   const addTrade = useTradeStore((s) => s.addTrade);
   const trades = useTradeStore(selectActiveTrades);
-  const defaultPair = useTradeStore((s) => selectActiveTradingSettings(s).defaultPair);
-  const accountBalance = useTradeStore((s) => selectActiveTradingSettings(s).accountBalance);
+  const defaultPair = useTradeStore(
+    (s) => selectActiveTradingSettings(s).defaultPair,
+  );
+  const accountBalance = useTradeStore(
+    (s) => selectActiveTradingSettings(s).accountBalance,
+  );
   const autoCalculations = useTradeStore((s) => s.appSettings.autoCalculations);
   const [tradeDate, setTradeDate] = useState(() => format(new Date(), "yyyy-MM-dd"));
   const [tradeCount, setTradeCount] = useState(1);
@@ -172,45 +235,42 @@ export function QuickProfitForm({
 
   useEffect(() => setMounted(true), []);
 
-  const existingOnDay = useMemo(() => tradesForDateKey(trades, tradeDate).length, [trades, tradeDate]);
-  const maxNew = useMemo(() => Math.max(0, 3 - existingOnDay), [existingOnDay]);
-
-  useEffect(() => {
-    setTradeCount((c) => Math.min(Math.max(1, c), Math.max(1, maxNew || 1)));
-  }, [maxNew]);
+  const existingOnDay = useMemo(
+    () => tradesForDateKey(trades, tradeDate).length,
+    [trades, tradeDate],
+  );
 
   useEffect(() => {
     setRows((r) => {
-      const cap = Math.max(1, maxNew || 1);
-      const target = Math.min(tradeCount, cap);
+      const target = Math.min(tradeCount, maxBatch);
       const next = r.slice(0, target);
       while (next.length < target) {
         next.push({ direction: "BUY", profit: "" });
       }
       return next;
     });
-  }, [tradeCount, maxNew]);
-
-  const totalPnl = useMemo(() => {
-    return rows.reduce((s, row) => {
-      const n = Number.parseFloat(row.profit);
-      return s + (Number.isFinite(n) ? n : 0);
-    }, 0);
-  }, [rows]);
+  }, [tradeCount, maxBatch]);
 
   const valid =
-    maxNew > 0 &&
     rows.length > 0 &&
-    rows.every((row) => row.profit.trim() !== "" && Number.isFinite(Number.parseFloat(row.profit)));
+    rows.every(
+      (row) =>
+        row.profit.trim() !== "" &&
+        Number.isFinite(Number.parseFloat(row.profit)),
+    );
 
   const previewRoi =
     autoCalculations && accountBalance > 0 && valid
-      ? (rows.reduce((s, row) => s + Number.parseFloat(row.profit), 0) / accountBalance) * 100
+      ? (rows.reduce((s, row) => s + Number.parseFloat(row.profit), 0) /
+          accountBalance) *
+        100
       : null;
 
   const handleSave = () => {
-    if (!valid || rows.length > maxNew) return;
-    const baseMs = new Date(isoFromLocalDatePreservingNowTime(tradeDate)).getTime();
+    if (!valid) return;
+    const baseMs = new Date(
+      isoFromLocalDatePreservingNowTime(tradeDate),
+    ).getTime();
     for (let i = 0; i < rows.length; i++) {
       const pnlNum = Number.parseFloat(rows[i].profit);
       const trade = createTradeFromProfitOnly({
@@ -243,6 +303,11 @@ export function QuickProfitForm({
     }
   };
 
+  const handleOpenFullTradeEditor = useCallback(() => {
+    router.push(`/new/detail?date=${encodeURIComponent(tradeDate)}`);
+    onRequestClose?.();
+  }, [router, tradeDate, onRequestClose]);
+
   if (!mounted) {
     return (
       <div className="min-h-[40vh] px-5 py-12">
@@ -253,8 +318,6 @@ export function QuickProfitForm({
       </div>
     );
   }
-
-  const allowedCounts = [1, 2, 3].filter((n) => n <= maxNew);
 
   return (
     <div
@@ -267,15 +330,35 @@ export function QuickProfitForm({
       <div
         className={cn(
           "mx-auto max-w-md",
-          isModal ? "flex h-full min-h-0 min-w-0 flex-1 flex-col gap-5 pr-8 sm:pr-0" : "space-y-6"
+          isModal
+            ? "flex h-full min-h-0 min-w-0 flex-1 flex-col gap-5 pr-8 sm:pr-0"
+            : "space-y-6",
         )}
       >
         <header className={cn(isModal && "shrink-0")}>
-          <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[var(--text-muted)]">New trade</p>
-          <h1 className="mt-2 text-2xl font-semibold tracking-tight text-[var(--text-primary)]">Log results</h1>
+          <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[var(--text-muted)]">
+            New trade
+          </p>
+          <h1 className="mt-2 text-2xl font-semibold tracking-tight text-[var(--text-primary)]">
+            Log results
+          </h1>
           <p className="mt-2 text-sm text-[var(--text-secondary)]">
-            Pick the date, how many fills you are logging (up to {maxNew || 0} left on this day), and BUY or SELL plus P/L
-            for each.
+            {isModal ? (
+              <>
+                Log up to {maxBatch} quick fills (side + P/L), or tap{" "}
+                <span className="font-medium text-[var(--text-primary)]">
+                  +
+                </span>{" "}
+                for the full form (prices, notes, screenshots) on the date you
+                picked.
+              </>
+            ) : (
+              <>
+                Pick the date, how many fills you are logging in one go (up to{" "}
+                {maxBatch}; save again for more), and BUY or SELL plus P/L for
+                each.
+              </>
+            )}
           </p>
         </header>
 
@@ -283,26 +366,27 @@ export function QuickProfitForm({
           <div className="flex min-h-0 flex-1 flex-col gap-3">
             <div
               className={cn(
-                "min-h-0 flex-1 overflow-y-auto overscroll-y-contain rounded-md border border-[var(--border)] bg-[var(--bg-raised)]/85 p-6 [scrollbar-gutter:stable] backdrop-blur-xl"
+                "min-h-0 flex-1 overflow-y-auto overscroll-y-contain rounded-md border border-[var(--border)] bg-[var(--bg-raised)]/85 p-6 [scrollbar-gutter:stable] backdrop-blur-xl",
               )}
             >
               <QuickProfitCardFields
                 tradeDate={tradeDate}
                 setTradeDate={setTradeDate}
-                maxNew={maxNew}
                 existingOnDay={existingOnDay}
-                allowedCounts={allowedCounts}
+                batchCountOptions={batchCountOptions}
                 tradeCount={tradeCount}
                 setTradeCount={setTradeCount}
                 rows={rows}
                 setRows={setRows}
                 previewRoi={previewRoi}
-                totalPnl={totalPnl}
                 accountBalance={accountBalance}
+                showFullTradeEditor
+                onOpenFullTradeEditor={handleOpenFullTradeEditor}
               />
             </div>
             <p className="shrink-0 text-xs text-[var(--text-muted)]">
-              Add levels, notes, or screenshots later from the calendar → trade → Edit.
+              Need more rows? Use + for the full trade form, or save and open
+              this log again.
             </p>
           </div>
         ) : (
@@ -310,15 +394,13 @@ export function QuickProfitForm({
             <QuickProfitCardFields
               tradeDate={tradeDate}
               setTradeDate={setTradeDate}
-              maxNew={maxNew}
               existingOnDay={existingOnDay}
-              allowedCounts={allowedCounts}
+              batchCountOptions={batchCountOptions}
               tradeCount={tradeCount}
               setTradeCount={setTradeCount}
               rows={rows}
               setRows={setRows}
               previewRoi={previewRoi}
-              totalPnl={totalPnl}
               accountBalance={accountBalance}
             />
           </div>
@@ -326,7 +408,8 @@ export function QuickProfitForm({
 
         {!isModal ? (
           <p className="text-xs text-[var(--text-muted)]">
-            Add levels, notes, or screenshots later from the calendar → trade → Edit.
+            Add levels, notes, or screenshots later from the calendar → trade →
+            Edit.
           </p>
         ) : null}
       </div>
@@ -348,7 +431,7 @@ export function QuickProfitForm({
               "w-full rounded-md px-6 py-3 text-sm font-semibold transition sm:w-auto",
               valid
                 ? "bg-[var(--accent)] text-[var(--accent-on-accent)] shadow-[0_8px_28px_var(--accent-glow)] hover:brightness-110"
-                : "cursor-not-allowed bg-[var(--fx-08)] text-[var(--text-muted)]"
+                : "cursor-not-allowed bg-[var(--fx-08)] text-[var(--text-muted)]",
             )}
           >
             Save {rows.length === 1 ? "trade" : `${rows.length} trades`}
@@ -372,7 +455,7 @@ export function QuickProfitForm({
                 "w-full rounded-md px-6 py-3 text-sm font-semibold transition sm:w-auto",
                 valid
                   ? "bg-[var(--accent)] text-[var(--accent-on-accent)] shadow-[0_8px_28px_var(--accent-glow)] hover:brightness-110"
-                  : "cursor-not-allowed bg-[var(--fx-08)] text-[var(--text-muted)]"
+                  : "cursor-not-allowed bg-[var(--fx-08)] text-[var(--text-muted)]",
               )}
             >
               Save {rows.length === 1 ? "trade" : `${rows.length} trades`}

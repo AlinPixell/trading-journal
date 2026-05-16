@@ -31,11 +31,15 @@ export default function HomePage() {
   const dayTrades = useMemo(() => {
     if (!selectedDate) return [];
     return tradesForDateKey(trades, getDateKey(selectedDate)).sort(
-      (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+      (a, b) =>
+        new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
     );
   }, [selectedDate, trades]);
 
-  const dayPnl = useMemo(() => dayTrades.reduce((s, t) => s + t.pnl, 0), [dayTrades]);
+  const dayPnl = useMemo(
+    () => dayTrades.reduce((s, t) => s + t.pnl, 0),
+    [dayTrades],
+  );
 
   if (!mounted || !selectedDate) {
     return (
@@ -56,15 +60,20 @@ export default function HomePage() {
         <div className="mx-auto max-w-[1400px] space-y-8">
           <header className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
             <div className="min-w-0">
-              <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[var(--text-muted)]">Calendar</p>
+              <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[var(--text-muted)]">
+                Calendar
+              </p>
               <h1 className="mt-2 text-2xl font-semibold tracking-tight text-[var(--text-primary)] sm:text-3xl">
                 {formatSelectedDate(selectedDate)}
               </h1>
               <p className="mt-2 text-sm text-[var(--text-secondary)]">
                 Day total{" "}
-                <span className={dayPnl >= 0 ? "text-emerald-300/95" : "text-red-300/90"}>
-                  {dayPnl >= 0 ? "+" : ""}
-                  {formatDollar(dayPnl)}
+                <span
+                  className={
+                    dayPnl >= 0 ? "text-profit/95" : "text-red-300/90"
+                  }
+                >
+                  {formatDollar(dayPnl, { unsigned: true })}
                 </span>
                 · {dayTrades.length} trade{dayTrades.length === 1 ? "" : "s"}
               </p>
@@ -82,34 +91,40 @@ export default function HomePage() {
             trades={trades}
             selectedDate={selectedDate}
             onSelectDate={setSelectedDate}
-            onOpenTrade={(t) => setModalTrade(t)}
             onViewChange={setCalendarView}
           />
 
-          {calendarView !== "week" ? (
-          <section className="rounded-md border border-[var(--border)] bg-[var(--bg-raised)]/80 p-4 backdrop-blur-xl sm:p-6">
-            <div className="mb-4 flex items-center justify-between gap-3">
-              <h2 className="text-sm font-semibold text-[var(--text-primary)]">Selected day</h2>
-              <button
-                type="button"
-                onClick={openNewTrade}
-                className="cursor-pointer text-xs font-semibold uppercase tracking-[0.16em] text-[var(--accent)]"
-              >
-                Log trade
-              </button>
-            </div>
-            {dayTrades.length === 0 ? (
-              <p className="py-10 text-center text-sm text-[var(--text-muted)]">No trades — keep the journal clean.</p>
-            ) : (
-              <ul className="space-y-1.5">
-                {dayTrades.map((t) => (
-                  <li key={t.id}>
-                    <TradeEventChip trade={t} onClick={() => setModalTrade(t)} />
-                  </li>
-                ))}
-              </ul>
-            )}
-          </section>
+          {calendarView === "day" ? (
+            <section className="rounded-md border border-[var(--border)] bg-[var(--bg-raised)]/80 p-4 backdrop-blur-xl sm:p-6">
+              <div className="mb-4 flex items-center justify-between gap-3">
+                <h2 className="text-sm font-semibold text-[var(--text-primary)]">
+                  Selected day
+                </h2>
+                <button
+                  type="button"
+                  onClick={openNewTrade}
+                  className="cursor-pointer text-xs font-semibold uppercase tracking-[0.16em] text-[var(--accent)]"
+                >
+                  Log trade
+                </button>
+              </div>
+              {dayTrades.length === 0 ? (
+                <p className="py-10 text-center text-sm text-[var(--text-muted)]">
+                  No trades — keep the journal clean.
+                </p>
+              ) : (
+                <ul className="space-y-1.5">
+                  {dayTrades.map((t) => (
+                    <li key={t.id}>
+                      <TradeEventChip
+                        trade={t}
+                        onClick={() => setModalTrade(t)}
+                      />
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </section>
           ) : null}
         </div>
       </div>

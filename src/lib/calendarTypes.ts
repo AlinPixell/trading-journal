@@ -1,1 +1,1 @@
-export type CalendarViewMode = "day" | "week" | "month" | "year";
+export type CalendarViewMode = "day" | "month";

@@ -1,8 +1,20 @@
 import { format, getHours, getMinutes } from "date-fns";
 
 export const getDateKey = (value: string | Date) => format(new Date(value), "yyyy-MM-dd");
-export const formatDollar = (value: number) =>
-  new Intl.NumberFormat(undefined, { style: "currency", currency: "USD", maximumFractionDigits: 2 }).format(value);
+export const formatDollar = (
+  value: number,
+  opts?: { maximumFractionDigits?: number; unsigned?: boolean },
+) =>
+  new Intl.NumberFormat(undefined, {
+    style: "currency",
+    currency: "USD",
+    maximumFractionDigits: opts?.maximumFractionDigits ?? 2,
+  }).format(opts?.unsigned ? Math.abs(value) : value);
+
+export const formatDollarWhole = (
+  value: number,
+  opts?: { unsigned?: boolean },
+) => formatDollar(value, { maximumFractionDigits: 0, unsigned: opts?.unsigned });
 
 export const formatTradeCreatedAt = (createdAt: string) => {
   const date = new Date(createdAt);

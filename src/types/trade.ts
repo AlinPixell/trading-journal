@@ -18,6 +18,8 @@ export type Trade = {
   takeProfitPrice: number;
   /** Actual price where take profit was filled */
   takeProfitHitPrice: number;
+  /** Actual price where stop loss was filled (optional; 0 if unknown) */
+  stopLossHitPrice: number;
   /** Account-currency P/L */
   pnl: number;
   /** Percentage return; may be derived when auto-calculations are on */
@@ -27,8 +29,12 @@ export type Trade = {
   confidence: number;
   rating: number;
   tags: string[];
+  /** Strategy labels (e.g. presets from the detailed trade form) */
+  strategies: string[];
   checklist: string[];
   screenshots: string[];
-  /** ISO-8601 including seconds */
+  /** Trade open time — ISO-8601 */
   createdAt: string;
+  /** Trade close time — ISO-8601 (optional) */
+  tradeEndedAt?: string;
 };

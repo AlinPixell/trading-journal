@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import type { Trade } from "@/types/trade";
+import type { CandlePlaybookItem, StrategyPlaybookItem } from "@/types/playbook";
 import type {
   AppSettings,
   JournalWorkspace,
@@ -9,17 +10,19 @@ import type {
   TradingSettings,
 } from "@/types/settings";
 import { getDateKey } from "@/lib/utils";
+import { normalizeTrade, syncDerivedFields } from "@/lib/tradeHelpers";
 import {
-  canAddTradeForDate,
-  normalizeTrade,
-  syncDerivedFields,
-} from "@/lib/tradeHelpers";
+  normalizeCandlePlaybookItem,
+  normalizeStrategyPlaybookItem,
+} from "@/lib/playbookHelpers";
 import type { CalendarViewMode } from "@/lib/calendarTypes";
 
 export type TradeStoreState = {
   profiles: JournalWorkspace[];
   activeProfileId: string;
   appSettings: AppSettings;
+  strategyPlaybook: StrategyPlaybookItem[];
+  candlePlaybook: CandlePlaybookItem[];
   addTrade: (trade: Trade) => { ok: boolean; error?: string };
   updateTrade: (trade: Trade) => void;
   deleteTrade: (id: string) => void;
@@ -36,6 +39,12 @@ export type TradeStoreState = {
   switchProfile: (id: string) => void;
   addProfile: (name?: string) => void;
   removeProfile: (id: string) => void;
+  addStrategyPlaybookItem: (draft: Omit<StrategyPlaybookItem, "id">) => void;
+  updateStrategyPlaybookItem: (item: StrategyPlaybookItem) => void;
+  removeStrategyPlaybookItem: (id: string) => void;
+  addCandlePlaybookItem: (draft: Omit<CandlePlaybookItem, "id">) => void;
+  updateCandlePlaybookItem: (item: CandlePlaybookItem) => void;
+  removeCandlePlaybookItem: (id: string) => void;
 };
 
 const fallbackStorage: Storage = {
@@ -67,7 +76,7 @@ const defaultTradingSettings: TradingSettings = {
 };
 
 const defaultAppSettings: AppSettings = {
-  accentColor: "#c25cff",
+  accentColor: "#ffffff",
   animationsEnabled: true,
   calendarDefaultView: "month",
   autoCalculations: true,
@@ -212,18 +221,36 @@ function mergeAppSettings(raw: unknown): AppSettings {
   };
 }
 
+function mergePlaybookFromPayload(
+  raw: unknown,
+  fallbackStrategy: StrategyPlaybookItem[],
+  fallbackCandle: CandlePlaybookItem[]
+): { strategyPlaybook: StrategyPlaybookItem[]; candlePlaybook: CandlePlaybookItem[] } {
+  const p = raw as Record<string, unknown> | null;
+  if (!p || typeof p !== "object") {
+    return { strategyPlaybook: fallbackStrategy, candlePlaybook: fallbackCandle };
+  }
+  return {
+    strategyPlaybook: Array.isArray(p.strategyPlaybook)
+      ? (p.strategyPlaybook as unknown[]).map(normalizeStrategyPlaybookItem)
+      : fallbackStrategy,
+    candlePlaybook: Array.isArray(p.candlePlaybook)
+      ? (p.candlePlaybook as unknown[]).map(normalizeCandlePlaybookItem)
+      : fallbackCandle,
+  };
+}
+
 export const useTradeStore = create<TradeStoreState>()(
   persist(
     (set, get) => ({
       profiles: [seedWorkspace],
       activeProfileId: seedWorkspace.id,
       appSettings: defaultAppSettings,
+      strategyPlaybook: [],
+      candlePlaybook: [],
       addTrade: (trade) => {
         const state = get();
         const ws = getActiveWorkspace(state);
-        if (!canAddTradeForDate(ws.trades, trade.createdAt)) {
-          return { ok: false, error: `Max ${3} trades per day.` };
-        }
         const prepared = prepareTrade(ws.tradingSettings, state.appSettings, trade);
         const idx = findActiveIndex(state);
         set((s) => {
@@ -240,14 +267,6 @@ export const useTradeStore = create<TradeStoreState>()(
         const ws = state.profiles[idx];
         const existing = ws.trades.find((t) => t.id === trade.id);
         if (!existing) return;
-        const oldKey = getDateKey(existing.createdAt);
-        const newKey = getDateKey(trade.createdAt);
-        if (oldKey !== newKey) {
-          const count = ws.trades.filter(
-            (t) => getDateKey(t.createdAt) === newKey && t.id !== trade.id
-          ).length;
-          if (count >= 3) return;
-        }
         const prepared = prepareTrade(ws.tradingSettings, state.appSettings, trade);
         set((s) => {
           const profiles = [...s.profiles];
@@ -329,7 +348,12 @@ export const useTradeStore = create<TradeStoreState>()(
               ? activeRaw
               : profiles[0].id;
           const appSettings = p.appSettings ? mergeAppSettings(p.appSettings) : state.appSettings;
-          set({ profiles, activeProfileId, appSettings });
+          const { strategyPlaybook, candlePlaybook } = mergePlaybookFromPayload(
+            p,
+            state.strategyPlaybook,
+            state.candlePlaybook
+          );
+          set({ profiles, activeProfileId, appSettings, strategyPlaybook, candlePlaybook });
           return;
         }
 
@@ -372,7 +396,13 @@ export const useTradeStore = create<TradeStoreState>()(
             trades: w.trades.map((t) => prepareTrade(w.tradingSettings, appSettings, t)),
           }));
 
-          return { profiles: allProfiles, appSettings };
+          const { strategyPlaybook, candlePlaybook } = mergePlaybookFromPayload(
+            p,
+            s.strategyPlaybook,
+            s.candlePlaybook
+          );
+
+          return { profiles: allProfiles, appSettings, strategyPlaybook, candlePlaybook };
         });
       },
       getTradeById: (id) => getActiveWorkspace(get()).trades.find((trade) => trade.id === id),
@@ -431,16 +461,58 @@ export const useTradeStore = create<TradeStoreState>()(
           }
           return { profiles: next, activeProfileId };
         }),
+      addStrategyPlaybookItem: (draft) =>
+        set((s) => ({
+          strategyPlaybook: [
+            ...s.strategyPlaybook,
+            {
+              id: newWorkspaceId(),
+              name: draft.name.trim() || "Untitled strategy",
+              image: draft.image ?? "",
+              howItWorks: draft.howItWorks ?? "",
+              whenToUse: draft.whenToUse ?? "",
+            },
+          ],
+        })),
+      updateStrategyPlaybookItem: (item) =>
+        set((s) => ({
+          strategyPlaybook: s.strategyPlaybook.map((row) => (row.id === item.id ? item : row)),
+        })),
+      removeStrategyPlaybookItem: (id) =>
+        set((s) => ({
+          strategyPlaybook: s.strategyPlaybook.filter((row) => row.id !== id),
+        })),
+      addCandlePlaybookItem: (draft) =>
+        set((s) => ({
+          candlePlaybook: [
+            ...s.candlePlaybook,
+            {
+              id: newWorkspaceId(),
+              name: draft.name.trim() || "Untitled pattern",
+              image: draft.image ?? "",
+              definition: draft.definition ?? "",
+            },
+          ],
+        })),
+      updateCandlePlaybookItem: (item) =>
+        set((s) => ({
+          candlePlaybook: s.candlePlaybook.map((row) => (row.id === item.id ? item : row)),
+        })),
+      removeCandlePlaybookItem: (id) =>
+        set((s) => ({
+          candlePlaybook: s.candlePlaybook.filter((row) => row.id !== id),
+        })),
     }),
     {
       name: "trade-journal-storage",
       storage: getStorage() as any,
-      version: 3,
+      version: 4,
       migrate: (persistedState: unknown, _fromVersion: number) => {
         const p = persistedState as Record<string, unknown> | null;
         if (!p || typeof p !== "object") return persistedState;
 
         const appSettings = mergeAppSettings(p.appSettings);
+        const { strategyPlaybook, candlePlaybook } = mergePlaybookFromPayload(p, [], []);
 
         if (Array.isArray(p.profiles) && p.profiles.length > 0) {
           const profiles = (p.profiles as unknown[]).map(normalizeWorkspace);
@@ -449,7 +521,7 @@ export const useTradeStore = create<TradeStoreState>()(
             typeof activeRaw === "string" && profiles.some((w) => w.id === activeRaw)
               ? activeRaw
               : profiles[0].id;
-          return { profiles, activeProfileId, appSettings };
+          return { profiles, activeProfileId, appSettings, strategyPlaybook, candlePlaybook };
         }
 
         const trades = Array.isArray(p.trades)
@@ -475,19 +547,23 @@ export const useTradeStore = create<TradeStoreState>()(
           ],
           activeProfileId: wid,
           appSettings,
+          strategyPlaybook,
+          candlePlaybook,
         };
       },
       partialize: (s) => ({
         profiles: s.profiles,
         activeProfileId: s.activeProfileId,
         appSettings: s.appSettings,
+        strategyPlaybook: s.strategyPlaybook,
+        candlePlaybook: s.candlePlaybook,
       }),
     }
   )
 );
 
-function normalizeCalendarView(v: CalendarViewMode | undefined): CalendarViewMode {
-  if (v === "day" || v === "week" || v === "month" || v === "year") return v;
+function normalizeCalendarView(v: unknown): CalendarViewMode {
+  if (v === "day" || v === "month") return v;
   return "month";
 }
 

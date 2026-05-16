@@ -13,6 +13,7 @@ export function normalizeTrade(raw: Record<string, unknown>): Trade {
   const stopPrice = Number(raw.stopPrice ?? 0);
   const takeProfitPrice = Number(raw.takeProfitPrice ?? 0);
   const takeProfitHitPrice = Number(raw.takeProfitHitPrice ?? raw.takeProfitPrice ?? 0);
+  const stopLossHitPrice = Number(raw.stopLossHitPrice ?? 0);
   const pnl = typeof raw.pnl === "number" ? raw.pnl : 0;
   const netROI = typeof raw.netROI === "number" ? raw.netROI : 0;
   let status: TradeStatus = (raw.status as TradeStatus) ?? "breakeven";
@@ -33,6 +34,7 @@ export function normalizeTrade(raw: Record<string, unknown>): Trade {
     stopPrice,
     takeProfitPrice,
     takeProfitHitPrice,
+    stopLossHitPrice,
     pnl,
     netROI,
     notes: String(raw.notes ?? ""),
@@ -40,9 +42,11 @@ export function normalizeTrade(raw: Record<string, unknown>): Trade {
     confidence: Number(raw.confidence ?? 0),
     rating: Number(raw.rating ?? 0),
     tags: Array.isArray(raw.tags) ? (raw.tags as string[]) : [],
+    strategies: Array.isArray(raw.strategies) ? (raw.strategies as string[]) : [],
     checklist: Array.isArray(raw.checklist) ? (raw.checklist as string[]) : [],
     screenshots: Array.isArray(raw.screenshots) ? (raw.screenshots as string[]) : [],
     createdAt: String(raw.createdAt ?? new Date().toISOString()),
+    tradeEndedAt: typeof raw.tradeEndedAt === "string" && raw.tradeEndedAt.length > 0 ? String(raw.tradeEndedAt) : undefined,
   };
 }
 
@@ -63,12 +67,6 @@ export function pnlSign(trade: Trade) {
 
 export function tradesForDateKey(trades: Trade[], key: string) {
   return trades.filter((t) => getDateKey(t.createdAt) === key);
-}
-
-export const MAX_TRADES_PER_DAY = 3;
-
-export function canAddTradeForDate(trades: Trade[], isoOrDate: string | Date) {
-  return tradesForDateKey(trades, getDateKey(isoOrDate)).length < MAX_TRADES_PER_DAY;
 }
 
 export function syncDerivedFields(trade: Trade, accountBalance: number, autoCalculations: boolean): Trade {
@@ -119,6 +117,7 @@ export function createTradeFromProfitOnly(params: {
     stopPrice: 0,
     takeProfitPrice: 0,
     takeProfitHitPrice: 0,
+    stopLossHitPrice: 0,
     pnl: params.pnl,
     netROI: 0,
     notes: "",
@@ -126,6 +125,7 @@ export function createTradeFromProfitOnly(params: {
     confidence: 0,
     rating: 0,
     tags: [],
+    strategies: [],
     checklist: [],
     screenshots: [],
     createdAt,

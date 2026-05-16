@@ -1,5 +1,6 @@
 "use client";
 
+import type { ReactNode } from "react";
 import * as Dialog from "@radix-ui/react-dialog";
 import { motion } from "framer-motion";
 import { Edit3, Trash2, X } from "lucide-react";
@@ -96,9 +97,40 @@ export function TradeDetailsModal({ trade, open, onClose, onDeleted }: TradeDeta
               </div>
 
               <div className="mb-6 grid gap-3 sm:grid-cols-3">
-                <Stat label="P/L" value={`${t.pnl >= 0 ? "+" : ""}${formatDollar(t.pnl)}`} highlight />
+                <Stat
+                  label="P/L"
+                  value={
+                    <span
+                      className={cn(
+                        t.pnl > 0
+                          ? "text-profit"
+                          : t.pnl < 0
+                            ? "text-red-300/90"
+                            : "text-[var(--text-primary)]",
+                      )}
+                    >
+                      {formatDollar(t.pnl, { unsigned: true })}
+                    </span>
+                  }
+                  highlight
+                />
                 <Stat label="R:R (planned)" value={rr != null ? `${rr.toFixed(2)} : 1` : "—"} />
-                <Stat label="% on account" value={`${pct >= 0 ? "+" : ""}${pct.toFixed(2)}%`} />
+                <Stat
+                  label="% on account"
+                  value={
+                    <span
+                      className={cn(
+                        pct > 0
+                          ? "text-profit"
+                          : pct < 0
+                            ? "text-red-300/90"
+                            : "text-[var(--text-primary)]",
+                      )}
+                    >
+                      {`${Math.abs(pct).toFixed(2)}%`}
+                    </span>
+                  }
+                />
               </div>
 
               <div className="mb-6 rounded-md border border-[var(--border-soft)] bg-[var(--bg-cell)] p-4">
@@ -149,7 +181,7 @@ export function TradeDetailsModal({ trade, open, onClose, onDeleted }: TradeDeta
   );
 }
 
-function Stat({ label, value, highlight }: { label: string; value: string; highlight?: boolean }) {
+function Stat({ label, value, highlight }: { label: string; value: ReactNode; highlight?: boolean }) {
   return (
     <div
       className={cn(
