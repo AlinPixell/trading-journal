@@ -384,8 +384,9 @@ export function TradeEditorForm({
                   )}
                 </p>
                 <p className="mt-2 text-xs leading-relaxed text-[var(--text-muted)]">
-                  Uses profile trading settings: balance {formatDollar(accountBalanceLive)}, lot {lotForCalc}, leverage
-                  1:{leverageLive}. Model is approximate (contract factor from symbol), not a broker statement.
+                  Uses profile trading settings: balance {formatDollar(accountBalanceLive)}, lot{" "}
+                  {Math.round(lotForCalc)}, leverage 1:{Math.round(leverageLive)}. Model is approximate (contract factor
+                  from symbol), not a broker statement.
                 </p>
               </div>
 

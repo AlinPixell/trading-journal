@@ -54,7 +54,10 @@ export function createTradesSessionChart(container: HTMLElement): {
       secondsVisible: false,
     },
     localization: {
-      locale: typeof navigator !== "undefined" ? navigator.language : "en-US",
+      locale:
+        typeof navigator !== "undefined" && navigator.language && !navigator.language.startsWith("en-US")
+          ? navigator.language
+          : "en",
     },
   };
 
@@ -70,6 +73,11 @@ export function createTradesSessionChart(container: HTMLElement): {
     borderVisible: true,
     priceLineVisible: true,
     lastValueVisible: true,
+    priceFormat: {
+      type: "price",
+      precision: 0,
+      minMove: 1,
+    },
   };
 
   const series = chart.addCandlestickSeries(candleOpts);

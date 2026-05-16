@@ -114,7 +114,7 @@ export function TradeDetailsModal({ trade, open, onClose, onDeleted }: TradeDeta
                   }
                   highlight
                 />
-                <Stat label="R:R (planned)" value={rr != null ? `${rr.toFixed(2)} : 1` : "—"} />
+                <Stat label="R:R (planned)" value={rr != null ? `${Math.round(rr)} : 1` : "—"} />
                 <Stat
                   label="% on account"
                   value={
@@ -127,7 +127,7 @@ export function TradeDetailsModal({ trade, open, onClose, onDeleted }: TradeDeta
                             : "text-[var(--text-primary)]",
                       )}
                     >
-                      {`${Math.abs(pct).toFixed(2)}%`}
+                      {`${Math.round(Math.abs(pct))}%`}
                     </span>
                   }
                 />
@@ -139,10 +139,10 @@ export function TradeDetailsModal({ trade, open, onClose, onDeleted }: TradeDeta
               </div>
 
               <div className="mb-6 grid gap-3 sm:grid-cols-2">
-                <Field label="Entry" value={t.entryPrice.toFixed(4)} />
-                <Field label="Stop" value={t.stopPrice.toFixed(4)} />
-                <Field label="Take profit" value={t.takeProfitPrice.toFixed(4)} />
-                <Field label="TP hit" value={t.takeProfitHitPrice.toFixed(4)} />
+                <Field label="Entry" value={String(Math.round(t.entryPrice))} />
+                <Field label="Stop" value={String(Math.round(t.stopPrice))} />
+                <Field label="Take profit" value={String(Math.round(t.takeProfitPrice))} />
+                <Field label="TP hit" value={String(Math.round(t.takeProfitHitPrice))} />
               </div>
 
               {t.notes ? (

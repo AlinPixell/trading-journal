@@ -70,7 +70,7 @@ export function TradeList({ trades, onChange }: { trades: XauUsdTrade[]; onChang
                           Entry
                         </dt>
                         <dd className="font-semibold tabular-nums text-[var(--text-primary)]">
-                          {t.entryPrice.toFixed(2)}
+                          {Math.round(t.entryPrice)}
                         </dd>
                       </div>
                       <div>
@@ -78,14 +78,14 @@ export function TradeList({ trades, onChange }: { trades: XauUsdTrade[]; onChang
                           Exit
                         </dt>
                         <dd className="font-semibold tabular-nums text-[var(--text-secondary)]">
-                          {closed ? t.exitPrice!.toFixed(2) : "—"}
+                          {closed ? Math.round(t.exitPrice!) : "—"}
                         </dd>
                       </div>
                       <div>
                         <dt className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--text-muted)]">
                           Lot size
                         </dt>
-                        <dd className="font-semibold tabular-nums text-[var(--text-primary)]">{t.lots}</dd>
+                        <dd className="font-semibold tabular-nums text-[var(--text-primary)]">{Math.round(t.lots)}</dd>
                       </div>
                     </dl>
                     {t.notes.trim() ? (

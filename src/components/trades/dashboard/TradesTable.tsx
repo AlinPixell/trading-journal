@@ -138,16 +138,16 @@ export function TradesTable(props: TradesTableProps) {
                       </span>
                     </td>
                     <td className="px-4 py-3.5 tabular-nums text-[var(--text-primary)] sm:px-6">
-                      {row.entry.toFixed(2)}
+                      {Math.round(row.entry)}
                     </td>
                     <td className="px-4 py-3.5 tabular-nums text-[var(--text-secondary)] sm:px-6">
-                      {row.exit != null ? row.exit.toFixed(2) : "—"}
+                      {row.exit != null ? Math.round(row.exit) : "—"}
                     </td>
                     <td className="px-4 py-3.5 tabular-nums text-[var(--text-muted)] sm:px-6">
-                      {row.stopLoss != null ? row.stopLoss.toFixed(2) : "—"}
+                      {row.stopLoss != null ? Math.round(row.stopLoss) : "—"}
                     </td>
                     <td className="px-4 py-3.5 tabular-nums text-[var(--text-muted)] sm:px-6">
-                      {row.takeProfit != null ? row.takeProfit.toFixed(2) : "—"}
+                      {row.takeProfit != null ? Math.round(row.takeProfit) : "—"}
                     </td>
                     <td
                       className={cn(
@@ -182,7 +182,7 @@ export function TradesTable(props: TradesTableProps) {
                               : "text-[var(--text-secondary)]",
                       )}
                     >
-                      {row.percent != null ? `${row.percent > 0 ? "+" : ""}${row.percent.toFixed(2)}%` : "—"}
+                      {row.percent != null ? `${row.percent > 0 ? "+" : ""}${Math.round(row.percent)}%` : "—"}
                     </td>
                     <td className="px-4 py-3.5 text-[var(--text-muted)] sm:px-6">{row.dateLabel}</td>
                     <td className="px-4 py-3.5 sm:px-6">

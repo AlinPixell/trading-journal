@@ -21,7 +21,7 @@ export function TradeStatsCards({ stats }: TradeStatsCardsProps) {
     },
     {
       label: "Win rate",
-      value: stats.winRate != null ? `${stats.winRate.toFixed(1)}%` : "—",
+      value: stats.winRate != null ? `${Math.round(stats.winRate)}%` : "—",
       hint:
         stats.closedTrades > 0
           ? `${stats.closedTrades} closed`

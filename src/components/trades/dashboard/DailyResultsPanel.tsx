@@ -49,7 +49,7 @@ export function DailyResultsPanel({ rows, className }: DailyResultsPanelProps) {
               }`}
             >
               {row.result > 0 ? "+" : ""}
-              {formatDollar(row.result, { maximumFractionDigits: 0 })}
+              {formatDollar(row.result)}
             </span>
             <span
               className={`text-right tabular-nums ${
@@ -61,7 +61,7 @@ export function DailyResultsPanel({ rows, className }: DailyResultsPanelProps) {
               }`}
             >
               {row.percent > 0 ? "+" : ""}
-              {row.percent.toFixed(2)}%
+              {Math.round(row.percent)}%
             </span>
           </div>
         ))}

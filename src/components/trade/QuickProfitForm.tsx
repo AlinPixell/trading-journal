@@ -164,7 +164,7 @@ function QuickProfitCardFields({
               ))}
             </div>
             <label className="mt-4 block text-sm font-medium text-[var(--text-secondary)]">
-              P/L ($)
+              P/L
             </label>
             <input
               type="text"
@@ -197,7 +197,7 @@ function QuickProfitCardFields({
                   : "text-[var(--text-secondary)]",
             )}
           >
-            {Math.abs(previewRoi).toFixed(2)}%
+            {Math.round(Math.abs(previewRoi))}%
           </span>{" "}
           on balance ({formatDollar(accountBalance)})
         </p>

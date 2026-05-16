@@ -76,7 +76,7 @@ export function estimateClosedTradePnlUsd(params: {
 
   const lot = params.lotSize > 0 ? params.lotSize : 0.01;
   const lev = params.leverage > 0 ? params.leverage / 100 : 1;
-  /** Linear in account size (vs $100k) so balance edits in settings reflect in the estimate. */
+  /** Linear in account size (vs 100k baseline) so balance edits in settings reflect in the estimate. */
   const acct = params.accountBalance > 0 ? params.accountBalance / 100_000 : 1;
 
   const contract = contractDollarsPerPriceUnitPerLot(params.pair);

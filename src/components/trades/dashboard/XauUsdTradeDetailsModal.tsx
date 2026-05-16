@@ -123,7 +123,7 @@ export function XauUsdTradeDetailsModal({
                     Entry
                   </dt>
                   <dd className="mt-0.5 font-semibold tabular-nums text-[var(--text-primary)]">
-                    {t.entryPrice.toFixed(2)}
+                    {Math.round(t.entryPrice)}
                   </dd>
                 </div>
                 <div>
@@ -131,14 +131,14 @@ export function XauUsdTradeDetailsModal({
                     Exit
                   </dt>
                   <dd className="mt-0.5 font-semibold tabular-nums text-[var(--text-secondary)]">
-                    {t.exitPrice != null && Number.isFinite(t.exitPrice) ? t.exitPrice.toFixed(2) : "—"}
+                    {t.exitPrice != null && Number.isFinite(t.exitPrice) ? Math.round(t.exitPrice) : "—"}
                   </dd>
                 </div>
                 <div>
                   <dt className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--text-muted)]">
                     Lot size
                   </dt>
-                  <dd className="mt-0.5 font-semibold tabular-nums text-[var(--text-primary)]">{t.lots}</dd>
+                  <dd className="mt-0.5 font-semibold tabular-nums text-[var(--text-primary)]">{Math.round(t.lots)}</dd>
                 </div>
                 <div>
                   <dt className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--text-muted)]">
@@ -153,7 +153,7 @@ export function XauUsdTradeDetailsModal({
                     Stop loss
                   </dt>
                   <dd className="mt-0.5 tabular-nums text-[var(--text-secondary)]">
-                    {t.stopLoss != null ? t.stopLoss.toFixed(2) : "—"}
+                    {t.stopLoss != null ? Math.round(t.stopLoss) : "—"}
                   </dd>
                 </div>
                 <div>
@@ -161,7 +161,7 @@ export function XauUsdTradeDetailsModal({
                     Take profit
                   </dt>
                   <dd className="mt-0.5 tabular-nums text-[var(--text-secondary)]">
-                    {t.takeProfit != null ? t.takeProfit.toFixed(2) : "—"}
+                    {t.takeProfit != null ? Math.round(t.takeProfit) : "—"}
                   </dd>
                 </div>
                 <div>
@@ -206,7 +206,7 @@ export function XauUsdTradeDetailsModal({
                             : "text-[var(--text-secondary)]",
                     )}
                   >
-                    {pct != null ? `${pct > 0 ? "+" : ""}${pct.toFixed(2)}%` : "—"}
+                    {pct != null ? `${pct > 0 ? "+" : ""}${Math.round(pct)}%` : "—"}
                   </dd>
                 </div>
               </dl>

@@ -80,7 +80,7 @@ export function EquityChart({ data, usesMock, className }: EquityChartProps) {
               tickFormatter={(v) =>
                 new Intl.NumberFormat(undefined, {
                   notation: "compact",
-                  maximumFractionDigits: 1,
+                  maximumFractionDigits: 0,
                 }).format(v as number)
               }
               width={44}

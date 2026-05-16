@@ -307,12 +307,12 @@ export function DashboardAnalytics({
         />
         <Kpi
           title="Win rate"
-          value={`${metrics.winrate.toFixed(1)}%`}
+          value={`${Math.round(metrics.winrate)}%`}
           animations={animations}
         />
         <Kpi
           title="Avg R:R"
-          value={metrics.avgRR != null ? metrics.avgRR.toFixed(2) : "—"}
+          value={metrics.avgRR != null ? `${Math.round(metrics.avgRR)}` : "—"}
           animations={animations}
         />
         <Kpi
@@ -362,8 +362,13 @@ export function DashboardAnalytics({
                   stroke="var(--chart-axis)"
                   tick={{ fontSize: 10 }}
                   width={40}
+                  tickFormatter={(v) => formatDollarWhole(Number(v), { unsigned: true })}
                 />
                 <Tooltip
+                  formatter={(value) => [
+                    formatDollarWhole(Number(value ?? 0), { unsigned: true }),
+                    "Balance",
+                  ]}
                   contentStyle={{
                     background: "var(--chart-tooltip-bg)",
                     border: "1px solid var(--chart-tooltip-border)",
@@ -405,10 +410,11 @@ export function DashboardAnalytics({
                   stroke="var(--chart-axis)"
                   tick={{ fontSize: 10 }}
                   width={36}
+                  tickFormatter={(v) => formatDollarWhole(Number(v), { unsigned: true })}
                 />
                 <Tooltip
                   formatter={(value) => [
-                    formatDollarWhole(Number(value), { unsigned: true }),
+                    formatDollarWhole(Number(value ?? 0), { unsigned: true }),
                     "P/L",
                   ]}
                   contentStyle={{
