@@ -96,7 +96,7 @@ export function CalendarExperience({
   ];
 
   const shell =
-    "rounded-md border border-[var(--border)] bg-[var(--bg-raised)]/85 p-4 shadow-[0_24px_80px_rgba(0,0,0,0.45)] backdrop-blur-xl sm:p-6";
+    "rounded-md border border-[var(--border)] bg-[var(--bg-raised)]/85 p-4 backdrop-blur-xl sm:p-6";
 
   return (
     <section className={shell}>
@@ -292,7 +292,7 @@ function MonthGrid({
                                 : "text-[var(--text-muted)]",
                           )}
                         >
-                          {formatDollar(net, { unsigned: true })}
+                          {formatDollar(net)}
                         </span>
                       </>
                     )}
@@ -338,7 +338,7 @@ function DayColumn({ day, trades }: { day: Date; trades: Trade[] }) {
                 : "text-[var(--text-primary)]",
           )}
         >
-          {formatDollar(net, { unsigned: true })}
+          {formatDollar(net)}
         </p>
         <p className="mt-1 text-sm text-[var(--text-muted)]">Day total P/L</p>
       </div>

@@ -63,7 +63,7 @@ export function TradeEventChip({
         " "
       )}
       <span className={cn(pnlClass, compact ? "text-[7px] sm:text-[8px]" : "")}>
-        {formatDollar(trade.pnl, { unsigned: true })}
+        {formatDollar(trade.pnl)}
       </span>
       <span
         className={cn(

@@ -377,7 +377,7 @@ export function TradeEditorForm({
                             : "text-[var(--text-primary)]",
                       )}
                     >
-                      {formatDollar(detailedPnlEstimate, { unsigned: true })}
+                      {formatDollar(detailedPnlEstimate)}
                     </span>
                   ) : (
                     "—"

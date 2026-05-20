@@ -263,7 +263,7 @@ function TradeRow({ trade }: { trade: Trade }) {
               pnlClass,
             )}
           >
-            {formatDollar(trade.pnl, { unsigned: true })}
+            {formatDollar(trade.pnl)}
           </p>
           <span className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--accent)]">
             Edit

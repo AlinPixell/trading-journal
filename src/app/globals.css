@@ -13,6 +13,9 @@
   --accent: #ffffff;
   --accent-glow: rgba(255, 255, 255, 0.35);
   --accent-on-accent: #111111;
+  --cta-bg: var(--accent);
+  --cta-fg: var(--accent-on-accent);
+  --cta-glow: var(--accent-glow);
   --profit: lab(62 -6.83 -55.27 / 0.9);
   --profit-soft: color-mix(in lab, var(--profit) 14%, transparent);
   --profit-glow: color-mix(in lab, var(--profit) 35%, transparent);
@@ -45,10 +48,13 @@ html[data-theme="light"] {
   --text-primary: rgba(15, 23, 42, 0.94);
   --text-secondary: rgba(15, 23, 42, 0.56);
   --text-muted: rgba(15, 23, 42, 0.38);
-  --border: rgba(15, 23, 42, 0.11);
-  --border-soft: rgba(15, 23, 42, 0.07);
+  --border: rgba(15, 23, 42, 0.18);
+  --border-soft: rgba(15, 23, 42, 0.11);
   --accent-glow: rgba(255, 255, 255, 0.28);
   --accent-on-accent: #111111;
+  --cta-bg: #111111;
+  --cta-fg: #ffffff;
+  --cta-glow: rgba(15, 23, 42, 0.32);
   --profit: lab(62 -6.83 -55.27 / 0.9);
   --profit-soft: color-mix(in lab, var(--profit) 12%, transparent);
   --profit-glow: color-mix(in lab, var(--profit) 32%, transparent);

@@ -109,7 +109,7 @@ export function TradeDetailsModal({ trade, open, onClose, onDeleted }: TradeDeta
                             : "text-[var(--text-primary)]",
                       )}
                     >
-                      {formatDollar(t.pnl, { unsigned: true })}
+                      {formatDollar(t.pnl)}
                     </span>
                   }
                   highlight

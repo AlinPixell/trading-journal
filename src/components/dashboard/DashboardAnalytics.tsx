@@ -214,8 +214,8 @@ export function DashboardAnalytics({
                 {periodLabel} target progress
               </p>
               <p className="mt-2 text-2xl font-semibold tabular-nums sm:text-3xl lg:text-4xl">
-                <span className="tabular-nums text-white">
-                  {formatDollarWhole(periodPnl, { unsigned: true })}
+                <span className="tabular-nums text-[var(--text-primary)]">
+                  {formatDollarWhole(periodPnl)}
                 </span>
                 <span className="text-base font-medium sm:text-lg lg:text-xl">
                   <span className="text-[var(--text-muted)]"> / </span>
@@ -242,7 +242,7 @@ export function DashboardAnalytics({
                   "Set targets in profile trading settings"
                 ) : remaining > 0 ? (
                   <>
-                    <span className="text-white tabular-nums">
+                    <span className="text-[var(--text-primary)] tabular-nums">
                       {formatDollarWhole(remaining, { unsigned: true })}
                     </span>
                     <span className="text-[var(--text-muted)]">
@@ -547,7 +547,7 @@ export function DashboardAnalytics({
               {heatmap.map((c) => (
                 <div
                   key={c.key}
-                  title={`${c.key}: ${formatDollarWhole(c.pnl, { unsigned: true })}`}
+                  title={`${c.key}: ${formatDollarWhole(c.pnl)}`}
                   className="h-2.5 w-2.5 rounded-sm"
                   style={{
                     background:
@@ -596,11 +596,11 @@ function PeriodSnapshotCard({
   losingTrades: number;
   netPnl: number;
 }) {
-  const netStr = formatDollarWhole(netPnl, { unsigned: true });
+  const netStr = formatDollarWhole(netPnl);
   return (
     <motion.div
       layout={animations}
-      className="flex h-full min-h-0 flex-col items-center text-center rounded-md border border-[var(--border)] bg-[color-mix(in_srgb,var(--bg-raised)_90%,transparent)] p-4 shadow-[0_20px_60px_rgba(0,0,0,0.35)] backdrop-blur-xl"
+      className="flex h-full min-h-0 flex-col items-center text-center rounded-md border border-[var(--border)] bg-[color-mix(in_srgb,var(--bg-raised)_90%,transparent)] p-4 backdrop-blur-xl"
       whileHover={animations ? { y: -2 } : undefined}
     >
       <div className="flex w-full min-h-0 flex-1 flex-col items-center justify-center gap-4">

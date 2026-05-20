@@ -3,13 +3,19 @@ import { format, getHours, getMinutes } from "date-fns";
 export const getDateKey = (value: string | Date) => format(new Date(value), "yyyy-MM-dd");
 /** Dollar amounts with `$` — whole dollars only (no cents). */
 export const formatDollar = (value: number, opts?: { unsigned?: boolean }) => {
-  const v = opts?.unsigned ? Math.abs(value) : value;
-  return new Intl.NumberFormat(undefined, {
-    style: "currency",
-    currency: "USD",
+  const rounded = Math.round(value);
+  const abs = Math.abs(rounded);
+  const digits = abs.toLocaleString("en-US", {
     maximumFractionDigits: 0,
     minimumFractionDigits: 0,
-  }).format(Math.round(v));
+  });
+  const amount = `$${digits}`;
+
+  if (opts?.unsigned || rounded >= 0) {
+    return amount;
+  }
+
+  return `-${amount}`;
 };
 
 export const formatDollarWhole = (value: number, opts?: { unsigned?: boolean }) =>

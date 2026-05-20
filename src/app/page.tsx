@@ -73,7 +73,7 @@ export default function HomePage() {
                     dayPnl >= 0 ? "text-profit/95" : "text-red-300/90"
                   }
                 >
-                  {formatDollar(dayPnl, { unsigned: true })}
+                  {formatDollar(dayPnl)}
                 </span>
                 · {dayTrades.length} trade{dayTrades.length === 1 ? "" : "s"}
               </p>

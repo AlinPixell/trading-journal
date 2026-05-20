@@ -228,7 +228,9 @@ export function QuickProfitForm({
     (s) => selectActiveTradingSettings(s).accountBalance,
   );
   const autoCalculations = useTradeStore((s) => s.appSettings.autoCalculations);
-  const [tradeDate, setTradeDate] = useState(() => format(new Date(), "yyyy-MM-dd"));
+  const [tradeDate, setTradeDate] = useState(() =>
+    format(new Date(), "yyyy-MM-dd"),
+  );
   const [tradeCount, setTradeCount] = useState(1);
   const [rows, setRows] = useState<Row[]>([{ direction: "BUY", profit: "" }]);
   const [mounted, setMounted] = useState(false);
@@ -323,7 +325,7 @@ export function QuickProfitForm({
     <div
       className={
         isModal
-          ? "flex h-full min-h-0 flex-1 flex-col px-0 pb-0 pt-1"
+          ? "flex h-full min-h-0 flex-1 flex-col gap-3 px-0 pb-0 pt-1"
           : "min-h-screen px-5 pb-[calc(8rem+env(safe-area-inset-bottom,0px))] pt-10 sm:px-10"
       }
     >
@@ -331,11 +333,11 @@ export function QuickProfitForm({
         className={cn(
           "mx-auto max-w-md",
           isModal
-            ? "flex h-full min-h-0 min-w-0 flex-1 flex-col gap-5 pr-8 sm:pr-0"
+            ? "flex h-full min-h-0 min-w-0 flex-1 flex-col gap-5"
             : "space-y-6",
         )}
       >
-        <header className={cn(isModal && "shrink-0")}>
+        <header className={cn(isModal && "shrink-0 pr-10 sm:pr-0")}>
           <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[var(--text-muted)]">
             New trade
           </p>
@@ -366,7 +368,7 @@ export function QuickProfitForm({
           <div className="flex min-h-0 flex-1 flex-col gap-3">
             <div
               className={cn(
-                "min-h-0 flex-1 overflow-y-auto overscroll-y-contain rounded-md border border-[var(--border)] bg-[var(--bg-raised)]/85 p-6 [scrollbar-gutter:stable] backdrop-blur-xl",
+                "min-h-0 flex-1 overflow-y-auto overscroll-y-contain rounded-md border border-[var(--border)] bg-[var(--bg-raised)]/85 px-5 pt-5 pb-6 [scrollbar-gutter:stable] backdrop-blur-xl sm:px-6 sm:pt-6 sm:pb-7",
               )}
             >
               <QuickProfitCardFields
@@ -384,10 +386,6 @@ export function QuickProfitForm({
                 onOpenFullTradeEditor={handleOpenFullTradeEditor}
               />
             </div>
-            <p className="shrink-0 text-xs text-[var(--text-muted)]">
-              Need more rows? Use + for the full trade form, or save and open
-              this log again.
-            </p>
           </div>
         ) : (
           <div className="rounded-md border border-[var(--border)] bg-[var(--bg-raised)]/85 p-6 backdrop-blur-xl">
@@ -415,11 +413,11 @@ export function QuickProfitForm({
       </div>
 
       {isModal ? (
-        <div className="mx-auto flex w-full max-w-md shrink-0 flex-col-reverse gap-3 border-t border-[var(--border-soft)] pt-5 sm:flex-row sm:items-center sm:justify-between">
+        <div className="mx-auto flex w-full max-w-md shrink-0 items-center justify-between gap-3 border-t border-[var(--border-soft)] pt-4">
           <button
             type="button"
             onClick={handleCancel}
-            className="w-full rounded-md border border-[var(--border-soft)] bg-[var(--fx-05)] px-5 py-3 text-sm font-semibold text-[var(--text-secondary)] sm:w-auto"
+            className="rounded-md px-3 py-2 text-sm font-medium text-[var(--text-secondary)] transition hover:text-[var(--text-primary)]"
           >
             Cancel
           </button>
@@ -428,7 +426,7 @@ export function QuickProfitForm({
             disabled={!valid}
             onClick={handleSave}
             className={cn(
-              "w-full rounded-md px-6 py-3 text-sm font-semibold transition sm:w-auto",
+              "rounded-md px-5 py-2 text-sm font-semibold transition",
               valid
                 ? "bg-[var(--accent)] text-[var(--accent-on-accent)] shadow-[0_8px_28px_var(--accent-glow)] hover:brightness-110"
                 : "cursor-not-allowed bg-[var(--fx-08)] text-[var(--text-muted)]",

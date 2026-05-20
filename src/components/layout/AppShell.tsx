@@ -77,7 +77,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             className={cn(
               "fixed right-4 z-40 lg:hidden",
               "top-[calc(12px+env(safe-area-inset-top,0px))]",
-              "inline-flex min-h-11 min-w-11 items-center justify-center rounded-md border border-[var(--border-soft)] bg-[color-mix(in_srgb,var(--glass)_88%,transparent)] text-[var(--text-primary)] shadow-sm backdrop-blur-2xl transition-colors hover:bg-[var(--fx-05)]",
+              "inline-flex min-h-11 min-w-11 items-center justify-center rounded-md border border-[var(--border-soft)] bg-[color-mix(in_srgb,var(--glass)_88%,transparent)] text-[var(--text-primary)] shadow-sm backdrop-blur-2xl transition-[opacity,colors] hover:bg-[var(--fx-05)]",
+              mobileMenuOpen && "pointer-events-none opacity-0",
             )}
             aria-label="Open navigation menu"
           >
@@ -86,90 +87,113 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </Dialog.Trigger>
         <Dialog.Portal>
           <Dialog.Overlay className="fixed inset-0 z-50 bg-[var(--overlay-scrim)] backdrop-blur-md lg:hidden" />
-          <Dialog.Content className="fixed left-4 right-4 top-[calc(56px+env(safe-area-inset-top,0px))] z-50 max-h-[min(540px,calc(100dvh-4rem-env(safe-area-inset-top)-env(safe-area-inset-bottom)))] overflow-y-auto rounded-md border border-[var(--border)] bg-[var(--bg-raised)] p-3 pt-14 shadow-xl outline-none backdrop-blur-2xl lg:hidden">
-            <Dialog.Title className="sr-only">Pages</Dialog.Title>
-            <Dialog.Description className="sr-only">
-              Navigate to Analytics, Calendar, Trades, and other sections.
-            </Dialog.Description>
-            <Dialog.Close asChild>
-              <button
-                type="button"
-                className="absolute right-2 top-2 flex min-h-11 min-w-11 shrink-0 items-center justify-center rounded-md border border-[var(--border-soft)] bg-[var(--fx-05)] text-[var(--text-primary)] transition hover:bg-[var(--fx-09)]"
-                aria-label="Close menu"
-              >
-                <X className="h-4 w-4" />
-              </button>
-            </Dialog.Close>
-            <button
-              type="button"
+          <Dialog.Content asChild>
+            <motion.div
               className={cn(
-                "mb-3 flex min-h-11 w-full origin-center items-center justify-center gap-2 rounded-md px-4 py-2.5 text-sm font-semibold text-[var(--accent-on-accent)] transition-transform duration-200 ease-out",
-                "bg-[var(--accent)] shadow-[0_-1px_15px_var(--accent-glow)] hover:scale-[1.01] active:scale-[1.005]",
+                "fixed inset-y-0 right-0 z-50 flex h-dvh w-[min(280px,88vw)] flex-col",
+                "border-l border-[var(--border)] bg-[var(--bg-raised)] shadow-xl outline-none backdrop-blur-2xl lg:hidden",
+                "pt-[env(safe-area-inset-top,0px)] pb-[env(safe-area-inset-bottom,0px)]",
               )}
-              onClick={() => {
-                closeMobileMenu();
-                openNewTrade();
-              }}
+              initial={animations ? { x: "100%" } : false}
+              animate={animations ? { x: 0 } : {}}
+              transition={{ type: "spring", stiffness: 320, damping: 32 }}
             >
-              <Plus className="h-4 w-4 shrink-0" strokeWidth={2.2} />
-              New trade
-            </button>
-            <ul className="flex flex-col gap-1 pb-3">
-              {mainNavLinks.map(({ href, label, icon: Icon }) => {
-                const active = pathname === href || (href !== "/" && pathname.startsWith(href));
-                return (
-                  <li key={`mnav-${href}`}>
-                    <Link
-                      href={href}
-                      onClick={closeMobileMenu}
-                      className={cn(
-                        "flex min-h-11 items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium transition-colors",
-                        active
-                          ? "bg-[var(--fx-07)] text-[var(--text-primary)] shadow-[inset_0_0_0_1px_var(--border)]"
-                          : "text-[var(--text-secondary)] hover:bg-[var(--fx-05)] hover:text-[var(--text-primary)]",
-                      )}
-                    >
-                      <Icon className="h-[18px] w-[18px] opacity-80" strokeWidth={1.75} />
-                      {label}
-                    </Link>
-                  </li>
-                );
-              })}
-            </ul>
-            <ul className="flex flex-col gap-1 border-t border-[var(--border-soft)] pt-3 pb-3">
-              {externalToolLinks.map(({ href, label }) => (
-                <li key={`mext-${href}`}>
-                  <a
-                    href={href}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className={cn(
-                      "flex min-h-11 items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium transition-colors",
-                      "text-[var(--text-secondary)] hover:bg-[var(--fx-05)] hover:text-[var(--text-primary)]",
-                    )}
-                    onClick={closeMobileMenu}
+              <Dialog.Title className="sr-only">Pages</Dialog.Title>
+              <Dialog.Description className="sr-only">
+                Navigate to Analytics, Calendar, Trades, and other sections.
+              </Dialog.Description>
+              <div className="flex shrink-0 items-center justify-between gap-3 border-b border-[var(--border-soft)] px-4 py-4">
+                <div className="min-w-0">
+                  <p className="text-[10px] font-medium uppercase tracking-[0.22em] text-[var(--text-muted)]">
+                    Trade Journal
+                  </p>
+                  <p className="mt-1 truncate text-base font-semibold tracking-tight text-[var(--text-primary)]">
+                    {profileName}
+                  </p>
+                </div>
+                <Dialog.Close asChild>
+                  <button
+                    type="button"
+                    className="flex min-h-11 min-w-11 shrink-0 items-center justify-center rounded-md border border-[var(--border-soft)] bg-[var(--fx-05)] text-[var(--text-primary)] transition hover:bg-[var(--fx-09)]"
+                    aria-label="Close menu"
                   >
-                    <ExternalLinkIcon className="h-[18px] w-[18px] opacity-80" strokeWidth={1.75} />
-                    {label}
-                  </a>
-                </li>
-              ))}
-            </ul>
-            <div className="border-t border-[var(--border-soft)] pt-2">
-              <Link
-                href={settingsHref}
-                onClick={closeMobileMenu}
-                className={cn(
-                  "flex min-h-11 w-full items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium transition-colors",
-                  settingsActive
-                    ? "bg-[var(--fx-07)] text-[var(--text-primary)] shadow-[inset_0_0_0_1px_var(--border)]"
-                    : "text-[var(--text-secondary)] hover:bg-[var(--fx-05)] hover:text-[var(--text-primary)]",
-                )}
-              >
-                <SettingsIcon className="h-[18px] w-[18px] opacity-80" strokeWidth={1.75} />
-                {settingsLabel}
-              </Link>
-            </div>
+                    <X className="h-4 w-4" />
+                  </button>
+                </Dialog.Close>
+              </div>
+              <div className="flex min-h-0 flex-1 flex-col overflow-y-auto p-3">
+                <button
+                  type="button"
+                  className={cn(
+                    "mb-3 flex min-h-11 w-full origin-center items-center justify-center gap-2 rounded-md px-4 py-2.5 text-sm font-semibold text-[var(--cta-fg)] transition-transform duration-200 ease-out",
+                    "bg-[var(--cta-bg)] shadow-[0_-1px_15px_var(--cta-glow)] hover:scale-[1.01] active:scale-[1.005]",
+                  )}
+                  onClick={() => {
+                    closeMobileMenu();
+                    openNewTrade();
+                  }}
+                >
+                  <Plus className="h-4 w-4 shrink-0" strokeWidth={2.2} />
+                  New trade
+                </button>
+                <ul className="flex flex-col gap-1 pb-3">
+                  {mainNavLinks.map(({ href, label, icon: Icon }) => {
+                    const active = pathname === href || (href !== "/" && pathname.startsWith(href));
+                    return (
+                      <li key={`mnav-${href}`}>
+                        <Link
+                          href={href}
+                          onClick={closeMobileMenu}
+                          className={cn(
+                            "flex min-h-11 items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium transition-colors",
+                            active
+                              ? "bg-[var(--fx-07)] text-[var(--text-primary)] shadow-[inset_0_0_0_1px_var(--border)]"
+                              : "text-[var(--text-secondary)] hover:bg-[var(--fx-05)] hover:text-[var(--text-primary)]",
+                          )}
+                        >
+                          <Icon className="h-[18px] w-[18px] opacity-80" strokeWidth={1.75} />
+                          {label}
+                        </Link>
+                      </li>
+                    );
+                  })}
+                </ul>
+                <ul className="flex flex-col gap-1 border-t border-[var(--border-soft)] pt-3 pb-3">
+                  {externalToolLinks.map(({ href, label }) => (
+                    <li key={`mext-${href}`}>
+                      <a
+                        href={href}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className={cn(
+                          "flex min-h-11 items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium transition-colors",
+                          "text-[var(--text-secondary)] hover:bg-[var(--fx-05)] hover:text-[var(--text-primary)]",
+                        )}
+                        onClick={closeMobileMenu}
+                      >
+                        <ExternalLinkIcon className="h-[18px] w-[18px] opacity-80" strokeWidth={1.75} />
+                        {label}
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+                <div className="mt-auto border-t border-[var(--border-soft)] pt-2">
+                  <Link
+                    href={settingsHref}
+                    onClick={closeMobileMenu}
+                    className={cn(
+                      "flex min-h-11 w-full items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium transition-colors",
+                      settingsActive
+                        ? "bg-[var(--fx-07)] text-[var(--text-primary)] shadow-[inset_0_0_0_1px_var(--border)]"
+                        : "text-[var(--text-secondary)] hover:bg-[var(--fx-05)] hover:text-[var(--text-primary)]",
+                    )}
+                  >
+                    <SettingsIcon className="h-[18px] w-[18px] opacity-80" strokeWidth={1.75} />
+                    {settingsLabel}
+                  </Link>
+                </div>
+              </div>
+            </motion.div>
           </Dialog.Content>
         </Dialog.Portal>
       </Dialog.Root>
@@ -191,8 +215,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             type="button"
             onClick={openNewTrade}
             className={cn(
-              "inline-flex min-h-11 shrink-0 origin-center items-center justify-center gap-2 rounded-md px-4 py-2.5 text-sm font-semibold text-[var(--accent-on-accent)] transition-transform duration-200 ease-out sm:min-h-0",
-              "bg-[var(--accent)] shadow-[0_-1px_15px_var(--accent-glow)] hover:scale-[1.04] active:scale-[1.02]",
+              "inline-flex min-h-11 shrink-0 origin-center items-center justify-center gap-2 rounded-md px-4 py-2.5 text-sm font-semibold text-[var(--cta-fg)] transition-transform duration-200 ease-out sm:min-h-0",
+              "bg-[var(--cta-bg)] shadow-[0_-1px_15px_var(--cta-glow)] hover:scale-[1.04] active:scale-[1.02]",
             )}
           >
             <Plus className="h-4 w-4 shrink-0" strokeWidth={2.2} />
