@@ -1,9 +1,10 @@
-const { app, BrowserWindow } = require("electron");
+const { app, BrowserWindow, nativeImage } = require("electron");
 const path = require("path");
 const http = require("http");
 const next = require("next");
 
 const isDev = process.env.ELECTRON_START_URL === "1";
+const iconPath = path.join(__dirname, "..", "build", "icon.png");
 let server;
 
 async function startNextServer() {
@@ -29,7 +30,7 @@ function createWindow() {
     height: 820,
     minWidth: 1024,
     minHeight: 720,
-    icon: path.join(__dirname, "..", "build", "icon.png"),
+    icon: iconPath,
     backgroundColor: "#0f0f0f",
     webPreferences: {
       contextIsolation: true,
@@ -55,6 +56,15 @@ app.on("before-quit", () => {
 });
 
 app.whenReady().then(async () => {
+  const appIcon = nativeImage.createFromPath(iconPath);
+  if (!appIcon.isEmpty()) {
+    if (process.platform === "darwin" && app.dock) {
+      app.dock.setIcon(appIcon);
+    } else if (process.platform !== "darwin") {
+      app.setIcon(appIcon);
+    }
+  }
+
   if (!isDev) {
     await startNextServer();
   }
