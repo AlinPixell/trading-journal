@@ -4,6 +4,9 @@
   "private": true,
   "main": "electron/main.js",
   "scripts": {
+    "sync:icons": "node scripts/sync-icons.mjs",
+    "predev": "node scripts/sync-icons.mjs",
+    "prebuild": "node scripts/sync-icons.mjs",
     "dev": "next dev",
     "build": "next build",
     "start": "next start",

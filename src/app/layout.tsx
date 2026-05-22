@@ -12,11 +12,6 @@ const inter = Inter({
 export const metadata: Metadata = {
   title: "Trade Journal",
   description: "Premium local-first trading journal with calendar, analytics, and targets.",
-  icons: {
-    icon: [{ url: "/icon.png?v=3", type: "image/png" }],
-    apple: [{ url: "/apple-icon.png?v=3", type: "image/png" }],
-    shortcut: ["/icon.png?v=3"],
-  },
 };
 
 export const viewport: Viewport = {
