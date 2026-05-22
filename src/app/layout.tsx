@@ -13,9 +13,9 @@ export const metadata: Metadata = {
   title: "Trade Journal",
   description: "Premium local-first trading journal with calendar, analytics, and targets.",
   icons: {
-    icon: [{ url: "/icon.png?v=2", type: "image/png" }],
-    apple: [{ url: "/apple-icon.png?v=2", type: "image/png" }],
-    shortcut: ["/icon.png?v=2"],
+    icon: [{ url: "/icon.png?v=3", type: "image/png" }],
+    apple: [{ url: "/apple-icon.png?v=3", type: "image/png" }],
+    shortcut: ["/icon.png?v=3"],
   },
 };
 
