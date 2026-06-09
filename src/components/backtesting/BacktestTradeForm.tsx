@@ -4,9 +4,18 @@ import { useMemo, useState } from "react";
 import { cn } from "@/lib/cn";
 import { loadTrades, saveTrades, XAUUSD_BACKTEST_TRADES_KEY } from "@/lib/xauusdTradeStorage";
 import type { XauUsdTrade, XauUsdTradeDirection } from "@/types/xauusd";
+import { ScreenshotThumb, useScreenshotLightbox } from "@/components/ui/ScreenshotGallery";
 
 function todayIsoDate(): string {
   const d = new Date();
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+}
+
+function isoToDateInput(iso: string): string {
+  const d = new Date(iso);
   const y = d.getFullYear();
   const m = String(d.getMonth() + 1).padStart(2, "0");
   const day = String(d.getDate()).padStart(2, "0");
@@ -24,19 +33,44 @@ function readFileAsDataUrl(file: File): Promise<string> {
 
 type BacktestTradeFormProps = {
   onLogged: () => void;
+  trade?: XauUsdTrade;
+  onCancel?: () => void;
 };
 
-export function BacktestTradeForm({ onLogged }: BacktestTradeFormProps) {
-  const [direction, setDirection] = useState<XauUsdTradeDirection>("BUY");
-  const [entryPrice, setEntryPrice] = useState("");
-  const [exitPrice, setExitPrice] = useState("");
-  const [lots, setLots] = useState("0.10");
-  const [stopLoss, setStopLoss] = useState("");
-  const [takeProfit, setTakeProfit] = useState("");
-  const [tradeDate, setTradeDate] = useState(todayIsoDate);
-  const [notes, setNotes] = useState("");
-  const [screenshot, setScreenshot] = useState<string | null>(null);
-  const [screenshotName, setScreenshotName] = useState<string | null>(null);
+export function BacktestTradeForm({ onLogged, trade, onCancel }: BacktestTradeFormProps) {
+  const isEdit = Boolean(trade);
+  const [direction, setDirection] = useState<XauUsdTradeDirection>(
+    () => trade?.direction ?? "BUY",
+  );
+  const [entryPrice, setEntryPrice] = useState(() => trade?.entryPrice.toString() ?? "");
+  const [exitPrice, setExitPrice] = useState(() => {
+    if (trade?.exitPrice != null && Number.isFinite(trade.exitPrice)) {
+      return String(trade.exitPrice);
+    }
+    return "";
+  });
+  const [lots, setLots] = useState(() => (trade ? String(trade.lots) : "0.10"));
+  const [stopLoss, setStopLoss] = useState(() => {
+    if (trade?.stopLoss != null && Number.isFinite(trade.stopLoss)) {
+      return String(trade.stopLoss);
+    }
+    return "";
+  });
+  const [takeProfit, setTakeProfit] = useState(() => {
+    if (trade?.takeProfit != null && Number.isFinite(trade.takeProfit)) {
+      return String(trade.takeProfit);
+    }
+    return "";
+  });
+  const [tradeDate, setTradeDate] = useState(() =>
+    trade ? isoToDateInput(trade.tradedAt) : todayIsoDate(),
+  );
+  const [notes, setNotes] = useState(() => trade?.notes ?? "");
+  const [screenshot, setScreenshot] = useState<string | null>(() => trade?.screenshot ?? null);
+  const [screenshotName, setScreenshotName] = useState<string | null>(() =>
+    trade?.screenshot ? "Existing screenshot" : null,
+  );
+  const { open: openLightbox, lightbox } = useScreenshotLightbox();
 
   const statusPreview = useMemo(() => {
     const ex = exitPrice.trim();
@@ -75,11 +109,12 @@ export function BacktestTradeForm({ onLogged }: BacktestTradeFormProps) {
 
     const tradedAt = new Date(`${tradeDate}T12:00:00`).toISOString();
 
-    const trade: XauUsdTrade = {
+    const nextTrade: XauUsdTrade = {
       id:
-        typeof crypto !== "undefined" && "randomUUID" in crypto
+        trade?.id ??
+        (typeof crypto !== "undefined" && "randomUUID" in crypto
           ? crypto.randomUUID()
-          : `${Date.now()}-${Math.random().toString(16).slice(2)}`,
+          : `${Date.now()}-${Math.random().toString(16).slice(2)}`),
       direction,
       entryPrice: entry,
       exitPrice: exitParsed != null && Number.isFinite(exitParsed) ? exitParsed : null,
@@ -93,7 +128,16 @@ export function BacktestTradeForm({ onLogged }: BacktestTradeFormProps) {
     };
 
     const prev = loadTrades(XAUUSD_BACKTEST_TRADES_KEY);
-    saveTrades(XAUUSD_BACKTEST_TRADES_KEY, [trade, ...prev]);
+    if (isEdit) {
+      saveTrades(
+        XAUUSD_BACKTEST_TRADES_KEY,
+        prev.map((t) => (t.id === nextTrade.id ? nextTrade : t)),
+      );
+      onLogged();
+      return;
+    }
+
+    saveTrades(XAUUSD_BACKTEST_TRADES_KEY, [nextTrade, ...prev]);
     onLogged();
 
     setEntryPrice("");
@@ -111,10 +155,10 @@ export function BacktestTradeForm({ onLogged }: BacktestTradeFormProps) {
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[var(--text-muted)]">
-            Backtest trade
+            {isEdit ? "Edit backtest trade" : "Backtest trade"}
           </p>
           <p className="mt-1 text-lg font-semibold text-[var(--text-primary)]">
-            Log from FXReplay (or any session)
+            {isEdit ? "Update session log entry" : "Log from FXReplay (or any session)"}
           </p>
           <p className="mt-1 text-xs text-[var(--text-secondary)]">
             Stored under{" "}
@@ -234,11 +278,24 @@ export function BacktestTradeForm({ onLogged }: BacktestTradeFormProps) {
               )}
             </span>
             {screenshot ? (
-              <img
-                src={screenshot}
-                alt=""
-                className="max-h-36 w-full rounded-md border border-[var(--border-soft)] object-contain"
-              />
+              <>
+                <ScreenshotThumb
+                  src={screenshot}
+                  onClick={() => openLightbox([screenshot], 0, isEdit ? "Backtest trade" : "New backtest trade")}
+                  className="border-0 bg-transparent hover:border-0"
+                  imgClassName="max-h-36 rounded-md border border-[var(--border-soft)]"
+                />
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    openLightbox([screenshot], 0, isEdit ? "Backtest trade" : "New backtest trade");
+                  }}
+                  className="self-start text-[10px] font-semibold uppercase tracking-[0.12em] text-[var(--accent)] hover:underline"
+                >
+                  View full size
+                </button>
+              </>
             ) : null}
           </label>
         </div>
@@ -247,6 +304,15 @@ export function BacktestTradeForm({ onLogged }: BacktestTradeFormProps) {
           <span className="rounded-md border border-[var(--border-soft)] bg-[var(--fx-05)] px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--text-muted)]">
             {statusPreview}
           </span>
+          {isEdit && onCancel ? (
+            <button
+              type="button"
+              onClick={onCancel}
+              className="inline-flex min-h-11 items-center justify-center rounded-md border border-[var(--border-soft)] bg-[var(--fx-05)] px-4 py-2.5 text-sm font-semibold text-[var(--text-secondary)] transition hover:bg-[var(--fx-09)]"
+            >
+              Cancel
+            </button>
+          ) : null}
           <button
             type="button"
             onClick={submit}
@@ -255,10 +321,11 @@ export function BacktestTradeForm({ onLogged }: BacktestTradeFormProps) {
               "bg-[var(--accent)] shadow-[0_-1px_15px_var(--accent-glow)] hover:scale-[1.02] active:scale-[1.01]",
             )}
           >
-            Save backtest trade
+            {isEdit ? "Save changes" : "Save backtest trade"}
           </button>
         </div>
       </div>
+      {lightbox}
     </div>
   );
 }

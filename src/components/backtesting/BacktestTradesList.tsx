@@ -24,7 +24,7 @@ export function BacktestTradesList({
       storageKey={XAUUSD_BACKTEST_TRADES_KEY}
       headerEyebrow="Session log"
       headerTitle="Backtest trades"
-      headerDescription="Tap a row for notes, screenshots, and more."
+      headerDescription="Tap a row for notes, screenshots, and edit."
       emptyMessage="No backtest trades yet."
     />
   );

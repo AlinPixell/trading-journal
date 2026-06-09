@@ -1,9 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import type { CandlePlaybookItem, StrategyPlaybookItem } from "@/types/playbook";
 import { useTradeStore } from "@/store/useTradeStore";
 import { CandlePlaybookDialog, StrategyPlaybookDialog } from "@/components/strategies/PlaybookEditorDialogs";
+import {
+  CandlePlaybookDetailModal,
+  StrategyPlaybookDetailModal,
+} from "@/components/strategies/PlaybookDetailModals";
+import { ScreenshotThumb, useScreenshotLightbox } from "@/components/ui/ScreenshotGallery";
 
 export function StrategiesPlaybookContent() {
   const strategyPlaybook = useTradeStore((s) => s.strategyPlaybook);
@@ -17,13 +22,28 @@ export function StrategiesPlaybookContent() {
 
   const [strategyDialogOpen, setStrategyDialogOpen] = useState(false);
   const [strategyEdit, setStrategyEdit] = useState<StrategyPlaybookItem | null>(null);
+  const [strategyDetailId, setStrategyDetailId] = useState<string | null>(null);
+
   const [candleDialogOpen, setCandleDialogOpen] = useState(false);
   const [candleEdit, setCandleEdit] = useState<CandlePlaybookItem | null>(null);
+  const [candleDetailId, setCandleDetailId] = useState<string | null>(null);
+  const { open: openLightbox, lightbox } = useScreenshotLightbox();
+
+  const strategyDetail = useMemo(
+    () => (strategyDetailId ? (strategyPlaybook.find((s) => s.id === strategyDetailId) ?? null) : null),
+    [strategyDetailId, strategyPlaybook],
+  );
+
+  const candleDetail = useMemo(
+    () => (candleDetailId ? (candlePlaybook.find((c) => c.id === candleDetailId) ?? null) : null),
+    [candleDetailId, candlePlaybook],
+  );
 
   const openNewStrategy = () => {
     setStrategyEdit(null);
     setStrategyDialogOpen(true);
   };
+
   const openEditStrategy = (item: StrategyPlaybookItem) => {
     setStrategyEdit(item);
     setStrategyDialogOpen(true);
@@ -33,6 +53,7 @@ export function StrategiesPlaybookContent() {
     setCandleEdit(null);
     setCandleDialogOpen(true);
   };
+
   const openEditCandle = (item: CandlePlaybookItem) => {
     setCandleEdit(item);
     setCandleDialogOpen(true);
@@ -53,6 +74,20 @@ export function StrategiesPlaybookContent() {
         initial={candleEdit}
         onCreate={addCandle}
         onUpdate={updateCandle}
+      />
+      <StrategyPlaybookDetailModal
+        item={strategyDetail}
+        open={strategyDetailId != null && strategyDetail != null}
+        onClose={() => setStrategyDetailId(null)}
+        onEdit={openEditStrategy}
+        onDelete={removeStrategy}
+      />
+      <CandlePlaybookDetailModal
+        item={candleDetail}
+        open={candleDetailId != null && candleDetail != null}
+        onClose={() => setCandleDetailId(null)}
+        onEdit={openEditCandle}
+        onDelete={removeCandle}
       />
 
       <header>
@@ -89,10 +124,8 @@ export function StrategiesPlaybookContent() {
               <li key={item.id}>
                 <PlaybookStrategyCard
                   item={item}
-                  onEdit={() => openEditStrategy(item)}
-                  onDelete={() => {
-                    if (window.confirm(`Remove “${item.name}” from your playbook?`)) removeStrategy(item.id);
-                  }}
+                  onOpen={() => setStrategyDetailId(item.id)}
+                  onOpenImage={() => openLightbox([item.image], 0, item.name)}
                 />
               </li>
             ))}
@@ -124,16 +157,15 @@ export function StrategiesPlaybookContent() {
               <li key={item.id}>
                 <PlaybookCandleCard
                   item={item}
-                  onEdit={() => openEditCandle(item)}
-                  onDelete={() => {
-                    if (window.confirm(`Remove “${item.name}”?`)) removeCandle(item.id);
-                  }}
+                  onOpen={() => setCandleDetailId(item.id)}
+                  onOpenImage={() => openLightbox([item.image], 0, item.name)}
                 />
               </li>
             ))}
           </ul>
         )}
       </section>
+      {lightbox}
     </div>
   );
 }
@@ -148,24 +180,32 @@ function EmptyPlaybookCard({ message }: { message: string }) {
 
 function PlaybookStrategyCard({
   item,
-  onEdit,
-  onDelete,
+  onOpen,
+  onOpenImage,
 }: {
   item: StrategyPlaybookItem;
-  onEdit: () => void;
-  onDelete: () => void;
+  onOpen: () => void;
+  onOpenImage: () => void;
 }) {
   return (
     <article className="flex h-full flex-col overflow-hidden rounded-md border border-[var(--border)] bg-[var(--bg-raised)]/85 shadow-[inset_0_0_0_1px_var(--border-soft)] backdrop-blur-xl">
       <div className="aspect-[16/10] w-full bg-[var(--fx-04)]">
         {item.image ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={item.image} alt="" className="h-full w-full object-cover" />
+          <ScreenshotThumb
+            src={item.image}
+            onClick={onOpenImage}
+            className="h-full rounded-none border-0 hover:border-0"
+            imgClassName="h-full object-cover"
+          />
         ) : (
           <div className="flex h-full items-center justify-center text-xs text-[var(--text-muted)]">No image</div>
         )}
       </div>
-      <div className="flex flex-1 flex-col gap-2 p-4">
+      <button
+        type="button"
+        onClick={onOpen}
+        className="flex flex-1 flex-col gap-2 p-4 text-left transition hover:bg-[var(--fx-05)]"
+      >
         <h3 className="font-semibold text-[var(--text-primary)]">{item.name}</h3>
         {item.howItWorks ? (
           <p className="line-clamp-3 text-xs text-[var(--text-secondary)]">{item.howItWorks}</p>
@@ -176,68 +216,50 @@ function PlaybookStrategyCard({
             {item.whenToUse}
           </p>
         ) : null}
-        <div className="mt-auto flex flex-wrap gap-2 pt-2">
-          <button
-            type="button"
-            onClick={onEdit}
-            className="rounded-md border border-[var(--border-soft)] bg-[var(--fx-06)] px-3 py-1.5 text-xs font-semibold text-[var(--text-primary)] transition hover:bg-[var(--fx-10)]"
-          >
-            Edit
-          </button>
-          <button
-            type="button"
-            onClick={onDelete}
-            className="rounded-md border border-red-400/25 bg-red-500/10 px-3 py-1.5 text-xs font-semibold text-red-200 transition hover:bg-red-500/18"
-          >
-            Delete
-          </button>
-        </div>
-      </div>
+        <span className="mt-auto text-[11px] font-semibold uppercase tracking-[0.14em] text-[var(--accent)]">
+          View details
+        </span>
+      </button>
     </article>
   );
 }
 
 function PlaybookCandleCard({
   item,
-  onEdit,
-  onDelete,
+  onOpen,
+  onOpenImage,
 }: {
   item: CandlePlaybookItem;
-  onEdit: () => void;
-  onDelete: () => void;
+  onOpen: () => void;
+  onOpenImage: () => void;
 }) {
   return (
     <article className="flex h-full flex-col overflow-hidden rounded-md border border-[var(--border)] bg-[var(--bg-raised)]/85 shadow-[inset_0_0_0_1px_var(--border-soft)] backdrop-blur-xl">
       <div className="aspect-[16/10] w-full bg-[var(--fx-04)]">
         {item.image ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={item.image} alt="" className="h-full w-full object-cover" />
+          <ScreenshotThumb
+            src={item.image}
+            onClick={onOpenImage}
+            className="h-full rounded-none border-0 hover:border-0"
+            imgClassName="h-full object-cover"
+          />
         ) : (
           <div className="flex h-full items-center justify-center text-xs text-[var(--text-muted)]">No image</div>
         )}
       </div>
-      <div className="flex flex-1 flex-col gap-2 p-4">
+      <button
+        type="button"
+        onClick={onOpen}
+        className="flex flex-1 flex-col gap-2 p-4 text-left transition hover:bg-[var(--fx-05)]"
+      >
         <h3 className="font-semibold text-[var(--text-primary)]">{item.name}</h3>
         {item.definition ? (
           <p className="line-clamp-4 text-xs text-[var(--text-secondary)]">{item.definition}</p>
         ) : null}
-        <div className="mt-auto flex flex-wrap gap-2 pt-2">
-          <button
-            type="button"
-            onClick={onEdit}
-            className="rounded-md border border-[var(--border-soft)] bg-[var(--fx-06)] px-3 py-1.5 text-xs font-semibold text-[var(--text-primary)] transition hover:bg-[var(--fx-10)]"
-          >
-            Edit
-          </button>
-          <button
-            type="button"
-            onClick={onDelete}
-            className="rounded-md border border-red-400/25 bg-red-500/10 px-3 py-1.5 text-xs font-semibold text-red-200 transition hover:bg-red-500/18"
-          >
-            Delete
-          </button>
-        </div>
-      </div>
+        <span className="mt-auto text-[11px] font-semibold uppercase tracking-[0.14em] text-[var(--accent)]">
+          View details
+        </span>
+      </button>
     </article>
   );
 }

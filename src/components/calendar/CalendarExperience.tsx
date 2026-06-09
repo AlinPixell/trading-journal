@@ -126,7 +126,7 @@ export function CalendarExperience({
           <button
             type="button"
             onClick={goToday}
-            className="min-h-10 rounded-md border border-[var(--border-soft)] bg-[var(--fx-04)] px-4 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-[var(--text-secondary)] transition hover:border-[var(--border)] hover:text-[var(--text-primary)]"
+            className="rounded-md border border-[var(--border-soft)] bg-[var(--fx-04)] px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--text-secondary)] transition hover:border-[var(--border)] hover:text-[var(--text-primary)]"
           >
             Today
           </button>

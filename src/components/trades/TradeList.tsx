@@ -5,8 +5,10 @@ import { format } from "date-fns";
 import { cn } from "@/lib/cn";
 import { loadTrades, saveTrades, XAUUSD_TRADES_KEY } from "@/lib/xauusdTradeStorage";
 import type { XauUsdTrade } from "@/types/xauusd";
+import { ScreenshotThumb, useScreenshotLightbox } from "@/components/ui/ScreenshotGallery";
 
 export function TradeList({ trades, onChange }: { trades: XauUsdTrade[]; onChange: () => void }) {
+  const { open: openLightbox, lightbox } = useScreenshotLightbox();
   const sorted = useMemo(
     () =>
       [...trades].sort((a, b) => new Date(a.tradedAt).getTime() - new Date(b.tradedAt).getTime()),
@@ -94,10 +96,10 @@ export function TradeList({ trades, onChange }: { trades: XauUsdTrade[]; onChang
                   </div>
                   {t.screenshot ? (
                     <div className="shrink-0 sm:max-w-[200px]">
-                      <img
+                      <ScreenshotThumb
                         src={t.screenshot}
-                        alt=""
-                        className="max-h-40 w-full rounded-md border border-[var(--border-soft)] object-contain"
+                        onClick={() => openLightbox([t.screenshot!], 0, `${t.direction} · ${format(new Date(t.tradedAt), "yyyy-MM-dd")}`)}
+                        imgClassName="max-h-40 object-contain"
                       />
                     </div>
                   ) : null}
@@ -116,6 +118,7 @@ export function TradeList({ trades, onChange }: { trades: XauUsdTrade[]; onChang
           })
         )}
       </ul>
+      {lightbox}
     </div>
   );
 }

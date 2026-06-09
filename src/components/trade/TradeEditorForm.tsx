@@ -7,6 +7,7 @@ import { syncDerivedFields } from "@/lib/tradeHelpers";
 import { TRADE_STRATEGY_PRESETS, TRADE_TAG_PRESETS } from "@/lib/tradeTaxonomy";
 import { selectActiveTradingSettings, useTradeStore } from "@/store/useTradeStore";
 import { cn } from "@/lib/cn";
+import { ScreenshotThumb, useScreenshotLightbox } from "@/components/ui/ScreenshotGallery";
 import { datetimeLocalInputToIso, formatDurationBetween, isoToDatetimeLocalValue } from "@/lib/datetimeLocal";
 import { estimateClosedTradePnlUsd } from "@/lib/estimatedTradePnl";
 import { formatDollar } from "@/lib/utils";
@@ -77,6 +78,7 @@ export function TradeEditorForm({
   const [strategies, setStrategies] = useState<string[]>(trade.strategies ?? []);
   const [checklist, setChecklist] = useState<string[]>(trade.checklist);
   const [screenshots, setScreenshots] = useState<string[]>(trade.screenshots);
+  const { open: openLightbox, lightbox } = useScreenshotLightbox();
 
   useEffect(() => {
     const { dateStr: d, timeStr: t } = partsFromIso(trade.createdAt);
@@ -507,11 +509,19 @@ export function TradeEditorForm({
               <div className="mt-3 grid gap-3 sm:grid-cols-2">
                 {screenshots.map((src, i) => (
                   <div key={i} className="relative overflow-hidden rounded-md border border-[var(--border-soft)]">
-                    <img src={src} alt="" className="h-40 w-full object-cover" />
+                    <ScreenshotThumb
+                      src={src}
+                      onClick={() => openLightbox(screenshots, i, title.trim() || pair)}
+                      className="rounded-none border-0 hover:border-0"
+                      imgClassName="h-40 object-cover"
+                    />
                     <button
                       type="button"
-                      className="absolute right-2 top-2 rounded-sm bg-black/70 px-2 py-1 text-xs text-white"
-                      onClick={() => setScreenshots((c) => c.filter((_, j) => j !== i))}
+                      className="absolute right-2 top-2 z-10 rounded-sm bg-black/70 px-2 py-1 text-xs text-white"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setScreenshots((c) => c.filter((_, j) => j !== i));
+                      }}
                     >
                       Remove
                     </button>
@@ -620,6 +630,7 @@ export function TradeEditorForm({
           </button>
         </div>
       </div>
+      {lightbox}
     </div>
   );
 }

@@ -2,7 +2,8 @@
 
 import * as Dialog from "@radix-ui/react-dialog";
 import { motion } from "framer-motion";
-import { Trash2, X } from "lucide-react";
+import { Edit3, Trash2, X } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useTradeStore } from "@/store/useTradeStore";
 import { cn } from "@/lib/cn";
 import {
@@ -14,6 +15,7 @@ import {
 import type { XauUsdTrade } from "@/types/xauusd";
 import { DEFAULT_PAIR } from "@/lib/tradesDashboardModel";
 import { formatDollar } from "@/lib/utils";
+import { ScreenshotGallery } from "@/components/ui/ScreenshotGallery";
 
 type XauUsdTradeDetailsModalProps = {
   trade: XauUsdTrade | null;
@@ -38,12 +40,19 @@ export function XauUsdTradeDetailsModal({
   onDeleted,
   storageKey = XAUUSD_TRADES_KEY,
 }: XauUsdTradeDetailsModalProps) {
+  const router = useRouter();
   const animations = useTradeStore((s) => s.appSettings.animationsEnabled);
   const isOpen = open && Boolean(trade);
   const t = trade;
 
   const pnl = t ? computeTradePnlUsd(t) : null;
   const pct = t ? tradePct(t) : null;
+
+  const handleEdit = () => {
+    if (!t) return;
+    router.push(`/backtesting/edit/${encodeURIComponent(t.id)}`);
+    onClose();
+  };
 
   const handleDelete = () => {
     if (!t) return;
@@ -97,6 +106,14 @@ export function XauUsdTradeDetailsModal({
                   </div>
                 </div>
                 <div className="flex shrink-0 gap-2">
+                  <button
+                    type="button"
+                    onClick={handleEdit}
+                    className="flex min-h-11 min-w-11 shrink-0 items-center justify-center rounded-md border border-[var(--border-soft)] bg-[var(--fx-05)] text-[var(--text-primary)] transition hover:bg-[var(--fx-09)] sm:min-h-0 sm:min-w-0 sm:p-2.5"
+                    aria-label="Edit trade"
+                  >
+                    <Edit3 className="h-4 w-4" />
+                  </button>
                   <button
                     type="button"
                     onClick={handleDelete}
@@ -227,13 +244,12 @@ export function XauUsdTradeDetailsModal({
                   <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--text-muted)]">
                     Screenshot
                   </p>
-                  <div className="mt-3 overflow-hidden rounded-md border border-[var(--border-soft)] bg-[var(--bg-base)]">
-                    <img
-                      src={t.screenshot}
-                      alt="Trade screenshot"
-                      className="max-h-[50vh] w-full object-contain object-center sm:max-h-[360px]"
-                    />
-                  </div>
+                  <ScreenshotGallery
+                    images={[t.screenshot]}
+                    title={DEFAULT_PAIR}
+                    containerClassName="mt-3"
+                    imgClassName="max-h-[50vh] object-center sm:max-h-[360px]"
+                  />
                 </div>
               ) : null}
 

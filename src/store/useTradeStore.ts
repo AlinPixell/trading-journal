@@ -49,6 +49,7 @@ export type TradeStoreState = {
   addCandlePlaybookItem: (draft: Omit<CandlePlaybookItem, "id">) => void;
   updateCandlePlaybookItem: (item: CandlePlaybookItem) => void;
   removeCandlePlaybookItem: (id: string) => void;
+  setDayJournal: (dateKey: string, content: string) => void;
 };
 
 /** SSR / non-browser: no-op persistence until the store runs in the client */
@@ -94,13 +95,16 @@ function newWorkspaceId() {
   return `p-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
 }
 
-function createWorkspace(overrides?: Partial<Pick<JournalWorkspace, "profile" | "tradingSettings" | "trades">>): JournalWorkspace {
+function createWorkspace(
+  overrides?: Partial<Pick<JournalWorkspace, "profile" | "tradingSettings" | "trades" | "dayJournals">>,
+): JournalWorkspace {
   const id = newWorkspaceId();
   return {
     id,
     profile: { ...defaultProfile, ...overrides?.profile },
     tradingSettings: { ...defaultTradingSettings, ...overrides?.tradingSettings },
     trades: overrides?.trades ? [...overrides.trades] : [],
+    dayJournals: overrides?.dayJournals ? { ...overrides.dayJournals } : {},
   };
 }
 
@@ -117,7 +121,8 @@ export function getActiveWorkspace(state: Pick<TradeStoreState, "profiles" | "ac
     return createWorkspace();
   }
   const i = findActiveIndex(state);
-  return state.profiles[i] ?? state.profiles[0];
+  const ws = state.profiles[i] ?? state.profiles[0];
+  return { ...ws, dayJournals: ws.dayJournals ?? {} };
 }
 
 export function selectActiveTrades(state: TradeStoreState): Trade[] {
@@ -130,6 +135,10 @@ export function selectActiveProfile(state: TradeStoreState): Profile {
 
 export function selectActiveTradingSettings(state: TradeStoreState): TradingSettings {
   return getActiveWorkspace(state).tradingSettings;
+}
+
+export function selectDayJournal(state: TradeStoreState, dateKey: string): string {
+  return getActiveWorkspace(state).dayJournals?.[dateKey] ?? "";
 }
 
 function prepareTrade(
@@ -203,7 +212,15 @@ function normalizeWorkspace(raw: unknown): JournalWorkspace {
     typeof r.tradingSettings === "object" && r.tradingSettings !== null
       ? { ...defaultTradingSettings, ...(r.tradingSettings as TradingSettings) }
       : { ...defaultTradingSettings };
-  return { id, profile, tradingSettings, trades };
+  const dayJournals =
+    typeof r.dayJournals === "object" && r.dayJournals !== null && !Array.isArray(r.dayJournals)
+      ? Object.fromEntries(
+          Object.entries(r.dayJournals as Record<string, unknown>).filter(
+            (entry): entry is [string, string] => typeof entry[1] === "string",
+          ),
+        )
+      : {};
+  return { id, profile, tradingSettings, trades, dayJournals };
 }
 
 function mergeAppSettings(raw: unknown): AppSettings {
@@ -499,13 +516,28 @@ export const useTradeStore = create<TradeStoreState>()(
         set((s) => ({
           candlePlaybook: s.candlePlaybook.filter((row) => row.id !== id),
         })),
+      setDayJournal: (dateKey, content) =>
+        set((s) => {
+          const idx = findActiveIndex(s);
+          const profiles = [...s.profiles];
+          const cur = profiles[idx];
+          const dayJournals = { ...(cur.dayJournals ?? {}) };
+          const trimmed = content.trim();
+          if (trimmed) {
+            dayJournals[dateKey] = content;
+          } else {
+            delete dayJournals[dateKey];
+          }
+          profiles[idx] = { ...cur, dayJournals };
+          return { profiles };
+        }),
     }),
     {
       name: TRADE_JOURNAL_PERSIST_KEY,
       storage: createJSONStorage(() =>
         typeof window !== "undefined" ? window.localStorage : noopPersistStorage,
       ),
-      version: 4,
+      version: 5,
       migrate: (persistedState: unknown, _fromVersion: number) => {
         const p = persistedState as Record<string, unknown> | null;
         if (!p || typeof p !== "object") return persistedState;
@@ -542,6 +574,7 @@ export const useTradeStore = create<TradeStoreState>()(
                   : {}),
               },
               trades,
+              dayJournals: {},
             },
           ],
           activeProfileId: wid,

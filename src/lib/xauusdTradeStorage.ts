@@ -138,12 +138,20 @@ function normalizeAnalysisEntry(raw: unknown): XauUsdAnalysisEntry | null {
   const title = typeof r.title === "string" ? r.title : "";
   const description = typeof r.description === "string" ? r.description : "";
   const tags = Array.isArray(r.tags) ? (r.tags as unknown[]).filter((t): t is string => typeof t === "string") : [];
-  const screenshot = typeof r.screenshot === "string" ? r.screenshot : "";
+  let screenshots: string[] = [];
+  if (Array.isArray(r.screenshots)) {
+    screenshots = (r.screenshots as unknown[]).filter(
+      (s): s is string => typeof s === "string" && s.length > 0,
+    );
+  } else if (typeof r.screenshot === "string" && r.screenshot.length > 0) {
+    screenshots = [r.screenshot];
+  }
+  screenshots = screenshots.slice(0, 3);
   const createdAt =
     typeof r.createdAt === "string" && r.createdAt.length > 0
       ? r.createdAt
       : new Date().toISOString();
-  return { id, title, description, tags, screenshot, createdAt };
+  return { id, title, description, tags, screenshots, createdAt };
 }
 
 function safeParseAnalysis(raw: string | null): XauUsdAnalysisEntry[] {

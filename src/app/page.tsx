@@ -13,6 +13,7 @@ import { tradesForDateKey } from "@/lib/tradeHelpers";
 import { getDateKey } from "@/lib/utils";
 import type { CalendarViewMode } from "@/lib/calendarTypes";
 import { TradeEventChip } from "@/components/calendar/TradeEventChip";
+import { DayJournalCard } from "@/components/calendar/DayJournalCard";
 
 export default function HomePage() {
   const trades = useTradeStore(selectActiveTrades);
@@ -95,36 +96,39 @@ export default function HomePage() {
           />
 
           {calendarView === "day" ? (
-            <section className="rounded-md border border-[var(--border)] bg-[var(--bg-raised)]/80 p-4 backdrop-blur-xl sm:p-6">
-              <div className="mb-4 flex items-center justify-between gap-3">
-                <h2 className="text-sm font-semibold text-[var(--text-primary)]">
-                  Selected day
-                </h2>
-                <button
-                  type="button"
-                  onClick={openNewTrade}
-                  className="cursor-pointer text-xs font-semibold uppercase tracking-[0.16em] text-[var(--accent)]"
-                >
-                  Log trade
-                </button>
-              </div>
-              {dayTrades.length === 0 ? (
-                <p className="py-10 text-center text-sm text-[var(--text-muted)]">
-                  No trades — keep the journal clean.
-                </p>
-              ) : (
-                <ul className="space-y-1.5">
-                  {dayTrades.map((t) => (
-                    <li key={t.id}>
-                      <TradeEventChip
-                        trade={t}
-                        onClick={() => setModalTrade(t)}
-                      />
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </section>
+            <>
+              <section className="rounded-md border border-[var(--border)] bg-[var(--bg-raised)]/80 p-4 backdrop-blur-xl sm:p-6">
+                <div className="mb-4 flex items-center justify-between gap-3">
+                  <h2 className="text-sm font-semibold text-[var(--text-primary)]">
+                    Selected day
+                  </h2>
+                  <button
+                    type="button"
+                    onClick={openNewTrade}
+                    className="cursor-pointer text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--accent)]"
+                  >
+                    Log trade
+                  </button>
+                </div>
+                {dayTrades.length === 0 ? (
+                  <p className="py-10 text-center text-sm text-[var(--text-muted)]">
+                    No trades — keep the journal clean.
+                  </p>
+                ) : (
+                  <ul className="space-y-1.5">
+                    {dayTrades.map((t) => (
+                      <li key={t.id}>
+                        <TradeEventChip
+                          trade={t}
+                          onClick={() => setModalTrade(t)}
+                        />
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </section>
+              <DayJournalCard selectedDate={selectedDate} />
+            </>
           ) : null}
         </div>
       </div>

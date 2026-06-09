@@ -34,10 +34,14 @@ export type Profile = {
   bio: string;
 };
 
+/** Date-keyed notes for calendar day view (yyyy-MM-dd → text) */
+export type DayJournals = Record<string, string>;
+
 /** One journal identity — separate trades, trader card, and trading settings */
 export type JournalWorkspace = {
   id: string;
   profile: Profile;
   tradingSettings: TradingSettings;
   trades: Trade[];
+  dayJournals: DayJournals;
 };

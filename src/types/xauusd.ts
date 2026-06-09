@@ -20,6 +20,7 @@ export type XauUsdAnalysisEntry = {
   title: string;
   description: string;
   tags: string[];
-  screenshot: string;
+  /** Up to 3 data URLs from local screenshots */
+  screenshots: string[];
   createdAt: string;
 };

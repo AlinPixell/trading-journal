@@ -11,6 +11,7 @@ import { formatFullTimestamp, plannedRiskReward } from "@/lib/tradeHelpers";
 import { selectActiveTradingSettings, useTradeStore } from "@/store/useTradeStore";
 import StatusBadge from "@/components/StatusBadge";
 import { cn } from "@/lib/cn";
+import { ScreenshotGallery } from "@/components/ui/ScreenshotGallery";
 
 type TradeDetailsModalProps = {
   trade: Trade | null;
@@ -155,11 +156,12 @@ export function TradeDetailsModal({ trade, open, onClose, onDeleted }: TradeDeta
               <div className="mb-6">
                 <p className="mb-3 text-[10px] font-semibold uppercase tracking-[0.22em] text-[var(--text-muted)]">Screenshots</p>
                 {t.screenshots.length ? (
-                  <div className="grid gap-3 sm:grid-cols-2">
-                    {t.screenshots.map((src, i) => (
-                      <img key={i} src={src} alt="" className="max-h-64 w-full rounded-md border border-[var(--border-soft)] object-cover" />
-                    ))}
-                  </div>
+                  <ScreenshotGallery
+                    images={t.screenshots}
+                    title={t.pair}
+                    containerClassName="grid gap-3 sm:grid-cols-2"
+                    imgClassName="max-h-64 object-cover"
+                  />
                 ) : (
                   <div className="rounded-md border border-dashed border-[var(--border-soft)] py-12 text-center text-sm text-[var(--text-muted)]">No image attached</div>
                 )}
