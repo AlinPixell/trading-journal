@@ -46,6 +46,10 @@ type CalendarExperienceProps = {
   onViewChange?: (mode: CalendarViewMode) => void;
 };
 
+function dayNetPnl(trades: Trade[], key: string) {
+  return tradesForDateKey(trades, key).reduce((s, t) => s + t.pnl, 0);
+}
+
 export function CalendarExperience({
   trades,
   selectedDate,
@@ -74,6 +78,20 @@ export function CalendarExperience({
 
   const filtered = useFilteredTrades(trades, search);
 
+  const displayPnl = useMemo(() => {
+    if (view === "day") {
+      return dayNetPnl(filtered, getDateKey(cursor));
+    }
+    const y = cursor.getFullYear();
+    const m = cursor.getMonth();
+    const prefix = `${y}-${String(m + 1).padStart(2, "0")}`;
+    return filtered
+      .filter((t) => getDateKey(t.createdAt).startsWith(prefix))
+      .reduce((s, t) => s + t.pnl, 0);
+  }, [filtered, view, cursor]);
+
+  const displayPnlLabel = view === "day" ? "Day total" : "Month total";
+
   const goToday = () => {
     const n = new Date();
     setCursor(n);
@@ -100,57 +118,51 @@ export function CalendarExperience({
 
   return (
     <section className={shell}>
-      <div className="mb-6 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-        <div className="flex flex-wrap items-center gap-3">
-          <div className="inline-flex items-center gap-1 rounded-md border border-[var(--border-soft)] bg-[var(--bg-cell)] p-1">
+      <div className="mb-6 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+        <div className="flex min-w-0 flex-col gap-2">
+          <div className="flex min-w-0 items-center gap-2">
+            <div
+              className="inline-flex min-w-0 flex-1 items-center gap-0.5 rounded-md border border-[var(--border-soft)] bg-[var(--bg-cell)] p-0.5 sm:flex-none sm:gap-1 sm:p-1"
+            >
+              <button
+                type="button"
+                onClick={() => navigate(-1)}
+                className="flex min-h-9 min-w-9 shrink-0 items-center justify-center rounded text-[var(--text-secondary)] transition hover:bg-[var(--fx-06)] hover:text-[var(--text-primary)] sm:min-h-10 sm:min-w-10"
+                aria-label="Previous"
+              >
+                <ChevronLeft className="h-4 w-4 sm:h-5 sm:w-5" strokeWidth={1.5} />
+              </button>
+              <span
+                className="min-w-0 flex-1 truncate px-1 text-center text-xs font-semibold tracking-tight text-[var(--text-primary)] sm:min-w-[140px] sm:flex-none sm:px-2 sm:text-sm lg:min-w-[200px]"
+              >
+                {monthYearLabel}
+              </span>
+              <button
+                type="button"
+                onClick={() => navigate(1)}
+                className="flex min-h-9 min-w-9 shrink-0 items-center justify-center rounded text-[var(--text-secondary)] transition hover:bg-[var(--fx-06)] hover:text-[var(--text-primary)] sm:min-h-10 sm:min-w-10"
+                aria-label="Next"
+              >
+                <ChevronRight className="h-4 w-4 sm:h-5 sm:w-5" strokeWidth={1.5} />
+              </button>
+            </div>
             <button
               type="button"
-              onClick={() => navigate(-1)}
-              className="flex min-h-10 min-w-10 items-center justify-center rounded text-[var(--text-secondary)] transition hover:bg-[var(--fx-06)] hover:text-[var(--text-primary)]"
-              aria-label="Previous"
+              onClick={goToday}
+              className="shrink-0 rounded-md border border-[var(--border-soft)] bg-[var(--fx-04)] px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--text-secondary)] transition hover:border-[var(--border)] hover:text-[var(--text-primary)] sm:px-2.5"
             >
-              <ChevronLeft className="h-5 w-5" strokeWidth={1.5} />
-            </button>
-            <span className="min-w-[140px] px-2 text-center text-sm font-semibold tracking-tight text-[var(--text-primary)] sm:min-w-[200px]">
-              {monthYearLabel}
-            </span>
-            <button
-              type="button"
-              onClick={() => navigate(1)}
-              className="flex min-h-10 min-w-10 items-center justify-center rounded text-[var(--text-secondary)] transition hover:bg-[var(--fx-06)] hover:text-[var(--text-primary)]"
-              aria-label="Next"
-            >
-              <ChevronRight className="h-5 w-5" strokeWidth={1.5} />
+              Today
             </button>
           </div>
-          <button
-            type="button"
-            onClick={goToday}
-            className="rounded-md border border-[var(--border-soft)] bg-[var(--fx-04)] px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--text-secondary)] transition hover:border-[var(--border)] hover:text-[var(--text-primary)]"
-          >
-            Today
-          </button>
-        </div>
-
-        <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
-          <div className="relative min-w-0 flex-1 sm:min-w-[200px] sm:max-w-xs">
-            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--text-muted)]" />
-            <input
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search symbol…"
-              className="w-full rounded-md border border-[var(--border-soft)] bg-[var(--bg-base)] py-2.5 pl-10 pr-4 text-base text-[var(--text-primary)] outline-none transition placeholder:text-[var(--text-muted)] focus:border-[color-mix(in_srgb,var(--accent)_45%,transparent)] sm:text-sm"
-            />
-          </div>
-          <div className="-mx-1 overflow-x-auto pb-0.5 [-ms-overflow-style:none] [scrollbar-width:none] sm:mx-0 sm:overflow-visible [&::-webkit-scrollbar]:hidden">
-            <div className="inline-flex shrink-0 rounded-md border border-[var(--border-soft)] bg-[var(--bg-cell)] p-1">
+          <div className="flex items-center justify-between gap-3 sm:hidden">
+            <div className="inline-flex rounded-md border border-[var(--border-soft)] bg-[var(--bg-cell)] p-0.5">
               {viewButtons.map(({ id, label }) => (
                 <button
                   key={id}
                   type="button"
                   onClick={() => setView(id)}
                   className={cn(
-                    "min-h-10 rounded px-3 py-2 text-xs font-semibold transition sm:min-h-0",
+                    "min-h-9 rounded px-3 py-1.5 text-[11px] font-semibold transition",
                     view === id
                       ? "bg-[var(--fx-10)] text-[var(--text-primary)] shadow-[inset_0_0_0_1px_var(--border-soft)]"
                       : "text-[var(--text-muted)] hover:text-[var(--text-secondary)]",
@@ -160,6 +172,52 @@ export function CalendarExperience({
                 </button>
               ))}
             </div>
+            <div className="min-w-0 text-right">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--text-muted)]">
+                {displayPnlLabel}
+              </p>
+              <p
+                className={cn(
+                  "text-sm font-semibold tabular-nums tracking-tight",
+                  displayPnl > 0
+                    ? "text-profit/95"
+                    : displayPnl < 0
+                      ? "text-red-300/90"
+                      : "text-[var(--text-primary)]",
+                )}
+              >
+                {formatDollar(displayPnl)}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div className="hidden min-w-0 items-center gap-3 sm:flex sm:flex-wrap">
+          <div className="relative min-w-0 flex-1 sm:min-w-[200px] sm:max-w-xs">
+            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--text-muted)]" />
+            <input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search symbol…"
+              className="w-full rounded-md border border-[var(--border-soft)] bg-[var(--bg-base)] py-2.5 pl-10 pr-4 text-sm text-[var(--text-primary)] outline-none transition placeholder:text-[var(--text-muted)] focus:border-[color-mix(in_srgb,var(--accent)_45%,transparent)]"
+            />
+          </div>
+          <div className="inline-flex shrink-0 rounded-md border border-[var(--border-soft)] bg-[var(--bg-cell)] p-1">
+            {viewButtons.map(({ id, label }) => (
+              <button
+                key={id}
+                type="button"
+                onClick={() => setView(id)}
+                className={cn(
+                  "rounded px-3 py-2 text-xs font-semibold transition",
+                  view === id
+                    ? "bg-[var(--fx-10)] text-[var(--text-primary)] shadow-[inset_0_0_0_1px_var(--border-soft)]"
+                    : "text-[var(--text-muted)] hover:text-[var(--text-secondary)]",
+                )}
+              >
+                {label}
+              </button>
+            ))}
           </div>
         </div>
       </div>
@@ -190,10 +248,6 @@ export function CalendarExperience({
       </AnimatePresence>
     </section>
   );
-}
-
-function dayNetPnl(trades: Trade[], key: string) {
-  return tradesForDateKey(trades, key).reduce((s, t) => s + t.pnl, 0);
 }
 
 function MonthGrid({
