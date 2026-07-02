@@ -75,13 +75,13 @@ function NavIconButton({
     <>
       <span
         className={cn(
-          "flex h-7 w-7 items-center justify-center rounded-md transition-all duration-200",
+          "flex h-6 w-6 items-center justify-center rounded-md transition-all duration-200",
           highlighted && "bg-[var(--fx-08)]",
         )}
       >
         <Icon
           className={cn(
-            "h-[22px] w-[22px] transition-colors duration-200",
+            "h-[18px] w-[18px] transition-colors duration-200",
             highlighted ? "text-[var(--text-primary)]" : "text-[var(--text-muted)]",
           )}
           strokeWidth={highlighted ? 2.25 : 1.75}
@@ -89,7 +89,7 @@ function NavIconButton({
       </span>
       <span
         className={cn(
-          "max-w-full truncate text-[10px] font-medium leading-tight transition-colors duration-200",
+          "max-w-full truncate text-[9px] font-medium leading-tight transition-colors duration-200",
           highlighted ? "text-[var(--text-primary)]" : "text-[var(--text-muted)]",
         )}
       >
@@ -99,7 +99,7 @@ function NavIconButton({
   );
 
   const className = cn(
-    "flex min-w-0 flex-1 flex-col items-center justify-center gap-0.5 px-1 py-2",
+    "flex min-w-0 flex-1 flex-col items-center justify-center gap-0.5 px-0.5 py-1.5",
     "transition-transform duration-200 select-none",
     "active:scale-[0.92]",
   );
@@ -163,16 +163,15 @@ export function MobileBottomNav() {
 
       <nav
         className={cn(
-          "fixed left-4 right-4 z-50 lg:hidden",
-          "bottom-[calc(12px+env(safe-area-inset-bottom,0px))]",
+          "fixed left-5 right-5 z-50 sm:left-8 sm:right-8 lg:hidden",
+          "bottom-[calc(10px+env(safe-area-inset-bottom,0px))]",
           "rounded-md border border-[var(--border)]",
           "bg-[color-mix(in_srgb,var(--bg-raised)_94%,transparent)]",
-          "shadow-[var(--nav-float-shadow)]",
           "backdrop-blur-2xl",
         )}
         aria-label="Main navigation"
       >
-        <div className="mx-auto grid max-w-lg grid-cols-5 items-stretch px-1 pt-1.5 pb-1">
+        <div className="grid w-full grid-cols-5 items-stretch px-0.5 pt-1 pb-0.5">
           {directNavItems.map(({ href, label, icon }) => (
             <NavIconButton
               key={href}

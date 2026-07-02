@@ -38,11 +38,6 @@
   --ring-bg: rgba(255, 255, 255, 0.08);
   --overlay-scrim: rgba(0, 0, 0, 0.55);
   --scroll-thumb: rgba(255, 255, 255, 0.12);
-  --nav-float-shadow:
-    0 0 0 1px rgba(255, 255, 255, 0.05),
-    0 0 6px rgba(255, 255, 255, 0.06),
-    0 0 14px rgba(255, 255, 255, 0.04),
-    0 0 22px rgba(255, 255, 255, 0.025);
 }
 
 html[data-theme="light"] {
@@ -82,11 +77,6 @@ html[data-theme="light"] {
   --ring-bg: rgba(15, 23, 42, 0.11);
   --overlay-scrim: rgba(15, 23, 42, 0.38);
   --scroll-thumb: rgba(15, 23, 42, 0.22);
-  --nav-float-shadow:
-    0 0 0 1px rgba(255, 255, 255, 0.6),
-    0 0 6px rgba(255, 255, 255, 0.35),
-    0 0 14px rgba(255, 255, 255, 0.2),
-    0 0 22px rgba(15, 23, 42, 0.03);
 }
 
 @theme inline {
