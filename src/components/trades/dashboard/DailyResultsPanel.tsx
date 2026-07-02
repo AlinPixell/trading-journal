@@ -9,13 +9,17 @@ type DailyResultsPanelProps = {
   className?: string;
 };
 
+const headerCellClass =
+  "min-w-0 text-[10px] font-semibold uppercase tracking-[0.12em] text-[var(--text-muted)]";
+const rowCellClass = "min-w-0 text-[11px]";
+
 export function DailyResultsPanel({ rows, className }: DailyResultsPanelProps) {
   const display = rows.slice(0, 10);
 
   return (
     <div
       className={cn(
-        "flex h-full min-h-[280px] flex-col rounded-md border border-[var(--border-soft)] bg-[var(--bg-cell)] p-4 sm:min-h-[300px] sm:p-5",
+        "flex h-full min-h-[280px] min-w-0 flex-col rounded-md border border-[var(--border-soft)] bg-[var(--bg-cell)] p-4 sm:min-h-[300px] sm:p-5",
         className,
       )}
     >
@@ -24,41 +28,49 @@ export function DailyResultsPanel({ rows, className }: DailyResultsPanelProps) {
       </p>
       <p className="mt-1 text-sm font-semibold text-[var(--text-primary)]">Last 10 sessions</p>
 
-      <div className="mt-4 flex shrink-0 border-b border-[var(--border-soft)] pb-2 text-[10px] font-semibold uppercase tracking-[0.12em] text-[var(--text-muted)]">
-        <span className="w-[32%]">Date</span>
-        <span className="w-[18%] text-right">Trades</span>
-        <span className="w-[28%] text-right">Result</span>
-        <span className="w-[22%] text-right">%</span>
+      <div className="mt-4 grid shrink-0 grid-cols-[minmax(0,1.15fr)_minmax(0,0.65fr)_minmax(0,1fr)_minmax(0,0.55fr)] gap-1 border-b border-[var(--border-soft)] pb-2">
+        <span className={headerCellClass}>Date</span>
+        <span className={cn(headerCellClass, "text-right")}>Trades</span>
+        <span className={cn(headerCellClass, "text-right")}>Result</span>
+        <span className={cn(headerCellClass, "text-right")}>%</span>
       </div>
 
-      <div className="mt-1 flex min-h-0 flex-1 flex-col gap-0 overflow-y-auto pr-1 [-ms-overflow-style:none] [scrollbar-width:thin]">
+      <div className="mt-1 flex min-h-0 min-w-0 flex-1 flex-col gap-0 overflow-y-auto overflow-x-hidden pr-1 [-ms-overflow-style:none] [scrollbar-width:thin]">
         {display.map((row) => (
           <div
             key={row.dateKey}
-            className="grid grid-cols-[32%_18%_28%_22%] items-center gap-1 border-b border-[var(--border-soft)] py-2.5 text-[11px] last:border-b-0"
+            className="grid grid-cols-[minmax(0,1.15fr)_minmax(0,0.65fr)_minmax(0,1fr)_minmax(0,0.55fr)] items-center gap-1 border-b border-[var(--border-soft)] py-2.5 last:border-b-0"
           >
-            <span className="truncate text-[var(--text-secondary)]">{row.label}</span>
-            <span className="text-right tabular-nums text-[var(--text-muted)]">{row.trades}</span>
+            <span className={cn(rowCellClass, "truncate text-[var(--text-secondary)]")}>
+              {row.label}
+            </span>
+            <span className={cn(rowCellClass, "text-right tabular-nums text-[var(--text-muted)]")}>
+              {row.trades}
+            </span>
             <span
-              className={`text-right tabular-nums font-medium ${
+              className={cn(
+                rowCellClass,
+                "text-right tabular-nums font-medium",
                 row.result > 0
                   ? "text-profit"
                   : row.result < 0
                     ? "text-red-300"
-                    : "text-[var(--text-muted)]"
-              }`}
+                    : "text-[var(--text-muted)]",
+              )}
             >
               {row.result > 0 ? "+" : ""}
               {formatDollar(row.result)}
             </span>
             <span
-              className={`text-right tabular-nums ${
+              className={cn(
+                rowCellClass,
+                "text-right tabular-nums",
                 row.percent > 0
                   ? "text-profit"
                   : row.percent < 0
                     ? "text-red-300"
-                    : "text-[var(--text-muted)]"
-              }`}
+                    : "text-[var(--text-muted)]",
+              )}
             >
               {row.percent > 0 ? "+" : ""}
               {Math.round(row.percent)}%

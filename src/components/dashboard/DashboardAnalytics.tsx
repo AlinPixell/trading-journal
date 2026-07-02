@@ -16,7 +16,7 @@ import {
   Cell,
 } from "recharts";
 import { motion } from "framer-motion";
-import { format } from "date-fns";
+import { format, startOfMonth } from "date-fns";
 import {
   selectActiveProfile,
   selectActiveTrades,
@@ -42,7 +42,11 @@ const periods: { id: AnalyticsPeriod; label: string }[] = [
   { id: "weekly", label: "Weekly" },
   { id: "monthly", label: "Monthly" },
   { id: "yearly", label: "Yearly" },
+  { id: "custom", label: "Custom" },
 ];
+
+const dateInputClass =
+  "min-h-11 w-full min-w-0 rounded-md border border-[var(--border-soft)] bg-[var(--bg-base)] px-3 py-2 text-base text-[var(--text-primary)] outline-none focus:border-[color-mix(in_srgb,var(--accent)_45%,transparent)] sm:min-h-0 sm:text-sm";
 
 const dashboardMainChartFrameClass = "mt-4 h-54 min-h-54 w-full min-w-0";
 
@@ -66,6 +70,8 @@ export function DashboardAnalytics({
   const animations = useTradeStore((s) => s.appSettings.animationsEnabled);
   const [period, setPeriod] = useState<AnalyticsPeriod>("monthly");
   const [anchor, setAnchor] = useState(() => new Date());
+  const [rangeStart, setRangeStart] = useState(() => startOfMonth(new Date()));
+  const [rangeEnd, setRangeEnd] = useState(() => new Date());
 
   useEffect(() => {
     const d = parseDayParam(initialDayKey);
@@ -74,16 +80,33 @@ export function DashboardAnalytics({
     setAnchor(d);
   }, [initialDayKey]);
 
+  const customRange = useMemo(
+    () => ({ start: rangeStart, end: rangeEnd }),
+    [rangeStart, rangeEnd],
+  );
+
   const filtered = useMemo(
-    () => filterTradesByPeriod(trades, period, anchor),
-    [trades, period, anchor],
+    () =>
+      filterTradesByPeriod(
+        trades,
+        period,
+        anchor,
+        period === "custom" ? customRange : undefined,
+      ),
+    [trades, period, anchor, customRange],
   );
   const metrics = useMemo(() => computeDashboardMetrics(filtered), [filtered]);
 
   const periodPnl = metrics.netPnl;
   const periodTarget = useMemo(
-    () => periodTargetAmount(period, tradingSettings, anchor),
-    [period, tradingSettings, anchor],
+    () =>
+      periodTargetAmount(
+        period,
+        tradingSettings,
+        anchor,
+        period === "custom" ? customRange : undefined,
+      ),
+    [period, tradingSettings, anchor, customRange],
   );
   const progress =
     periodTarget > 0
@@ -99,13 +122,20 @@ export function DashboardAnalytics({
         tradingSettings.accountBalance,
         period,
         anchor,
+        period === "custom" ? customRange : undefined,
       ),
-    [filtered, tradingSettings.accountBalance, period, anchor],
+    [filtered, tradingSettings.accountBalance, period, anchor, customRange],
   );
 
   const consistency = useMemo(
-    () => dailyConsistencySeries(trades, period, anchor),
-    [trades, period, anchor],
+    () =>
+      dailyConsistencySeries(
+        trades,
+        period,
+        anchor,
+        period === "custom" ? customRange : undefined,
+      ),
+    [trades, period, anchor, customRange],
   );
 
   const year = anchor.getFullYear();
@@ -118,8 +148,13 @@ export function DashboardAnalytics({
 
   const dailyTarget = tradingSettings.dailyTarget;
   const tradingDayCount = useMemo(
-    () => periodTradingDayCount(period, anchor),
-    [period, anchor],
+    () =>
+      periodTradingDayCount(
+        period,
+        anchor,
+        period === "custom" ? customRange : undefined,
+      ),
+    [period, anchor, customRange],
   );
 
   const dailyGoalKpi = useMemo(() => {
@@ -152,8 +187,11 @@ export function DashboardAnalytics({
     return { value, sub };
   }, [dailyTarget, tradingDayCount, metrics.netPnl]);
 
-  const periodLabel = periods.find((p) => p.id === period)?.label ?? "Period";
-  const goalKpiTitle = `${periodLabel} goal`;
+  const periodLabel =
+    period === "custom"
+      ? `${format(rangeStart, "MMM d")} – ${format(rangeEnd, "MMM d, yyyy")}`
+      : (periods.find((p) => p.id === period)?.label ?? "Period");
+  const goalKpiTitle = period === "custom" ? "Range goal" : `${periodLabel} goal`;
 
   const chartColor = positive ? "var(--accent)" : "#f87171";
   const softFill = positive ? "url(#pnlGrad)" : "url(#lossGrad)";
@@ -174,30 +212,65 @@ export function DashboardAnalytics({
           </p>
         </div>
         <div className="flex w-full min-w-0 flex-col gap-3 sm:w-auto sm:flex-row sm:flex-wrap sm:items-center">
-          <input
-            type="date"
-            value={format(anchor, "yyyy-MM-dd")}
-            onChange={(e) => setAnchor(new Date(e.target.value + "T12:00:00"))}
-            className="min-h-11 w-full min-w-0 rounded-md border border-[var(--border-soft)] bg-[var(--bg-base)] px-3 py-2 text-base text-[var(--text-primary)] sm:min-h-0 sm:w-auto sm:max-w-[13rem] sm:text-sm"
-          />
-          <div className="-mx-1 overflow-x-auto pb-0.5 [-ms-overflow-style:none] [scrollbar-width:none] sm:mx-0 sm:overflow-visible [&::-webkit-scrollbar]:hidden">
-            <div className="inline-flex shrink-0 rounded-md border border-[var(--border-soft)] bg-[var(--bg-cell)] p-1">
-              {periods.map((p) => (
-                <button
-                  key={p.id}
-                  type="button"
-                  onClick={() => setPeriod(p.id)}
-                  className={cn(
-                    "min-h-10 rounded px-3 py-2 text-xs font-semibold transition sm:min-h-0",
-                    period === p.id
-                      ? "bg-[var(--fx-11)] text-[var(--text-primary)] shadow-[inset_0_0_0_1px_var(--border-soft)]"
-                      : "text-[var(--text-muted)] hover:text-[var(--text-secondary)]",
-                  )}
-                >
-                  {p.label}
-                </button>
-              ))}
+          {period === "custom" ? (
+            <div className="grid w-full min-w-0 grid-cols-2 gap-2 sm:w-auto sm:max-w-[20rem]">
+              <label className="min-w-0">
+                <span className="mb-1 block text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--text-muted)]">
+                  From
+                </span>
+                <input
+                  type="date"
+                  value={format(rangeStart, "yyyy-MM-dd")}
+                  onChange={(e) =>
+                    setRangeStart(new Date(`${e.target.value}T12:00:00`))
+                  }
+                  className={dateInputClass}
+                />
+              </label>
+              <label className="min-w-0">
+                <span className="mb-1 block text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--text-muted)]">
+                  To
+                </span>
+                <input
+                  type="date"
+                  value={format(rangeEnd, "yyyy-MM-dd")}
+                  onChange={(e) =>
+                    setRangeEnd(new Date(`${e.target.value}T12:00:00`))
+                  }
+                  className={dateInputClass}
+                />
+              </label>
             </div>
+          ) : (
+            <input
+              type="date"
+              value={format(anchor, "yyyy-MM-dd")}
+              onChange={(e) => setAnchor(new Date(`${e.target.value}T12:00:00`))}
+              className={cn(dateInputClass, "sm:max-w-[13rem]")}
+            />
+          )}
+          <div className="grid w-full min-w-0 max-lg:grid-cols-3 max-lg:gap-1 rounded-md border border-[var(--border-soft)] bg-[var(--bg-cell)] p-1 sm:inline-flex sm:w-auto">
+            {periods.map((p) => (
+              <button
+                key={p.id}
+                type="button"
+                onClick={() => {
+                  if (p.id === "custom") {
+                    setRangeStart(startOfMonth(anchor));
+                    setRangeEnd(anchor);
+                  }
+                  setPeriod(p.id);
+                }}
+                className={cn(
+                  "min-h-10 rounded px-2.5 py-2 text-[11px] font-semibold transition sm:min-h-0 sm:px-3 sm:text-xs",
+                  period === p.id
+                    ? "bg-[var(--fx-11)] text-[var(--text-primary)] shadow-[inset_0_0_0_1px_var(--border-soft)]"
+                    : "text-[var(--text-muted)] hover:text-[var(--text-secondary)]",
+                )}
+              >
+                {p.label}
+              </button>
+            ))}
           </div>
         </div>
       </header>
@@ -298,7 +371,7 @@ export function DashboardAnalytics({
       </section>
 
       {/* KPI grid */}
-      <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <section className="grid max-lg:grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-2 xl:grid-cols-4">
         <Kpi
           title={goalKpiTitle}
           value={dailyGoalKpi.value}
@@ -603,39 +676,37 @@ function PeriodSnapshotCard({
       className="flex h-full min-h-0 flex-col items-center text-center rounded-md border border-[var(--border)] bg-[color-mix(in_srgb,var(--bg-raised)_90%,transparent)] p-4 backdrop-blur-xl"
       whileHover={animations ? { y: -2 } : undefined}
     >
-      <div className="flex w-full min-h-0 flex-1 flex-col items-center justify-center gap-4">
-        <div className="flex w-full max-w-[16rem] shrink-0 flex-col items-center gap-4">
-          <div className="min-w-0 w-full">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[var(--text-muted)]">
-              Trades
-            </p>
-            <p className="mt-1 text-xl font-semibold tabular-nums text-[var(--text-primary)] sm:text-2xl">
-              {totalTrades}
-            </p>
-            <p className="mt-0.5 text-[11px] text-[var(--text-secondary)]">
-              {winningTrades}W / {losingTrades}L
-            </p>
-          </div>
-          <div className="w-full border-t border-[var(--border-soft)] pt-4">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[var(--text-muted)]">
-              Net P/L
-            </p>
-            <p
-              className={cn(
-                "mt-1 text-xl font-semibold tabular-nums sm:text-2xl",
-                netPnl > 0
-                  ? "text-profit/95"
-                  : netPnl < 0
-                    ? "text-red-300/90"
-                    : "text-[var(--text-primary)]",
-              )}
-            >
-              {netStr}
-            </p>
-            <p className="mt-0.5 text-[11px] text-[var(--text-muted)]">
-              Selected period
-            </p>
-          </div>
+      <div className="flex w-full min-h-0 flex-1 max-lg:flex-row max-lg:items-stretch max-lg:divide-x max-lg:divide-[var(--border-soft)] lg:flex-col lg:gap-4">
+        <div className="flex min-w-0 flex-1 flex-col items-center justify-center max-lg:px-2 lg:w-full">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[var(--text-muted)]">
+            Trades
+          </p>
+          <p className="mt-1 text-lg font-semibold tabular-nums text-[var(--text-primary)] sm:text-2xl">
+            {totalTrades}
+          </p>
+          <p className="mt-0.5 text-[11px] text-[var(--text-secondary)]">
+            {winningTrades}W / {losingTrades}L
+          </p>
+        </div>
+        <div className="flex min-w-0 flex-1 flex-col items-center justify-center max-lg:px-2 lg:w-full lg:border-t lg:border-[var(--border-soft)] lg:pt-4">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[var(--text-muted)]">
+            Net P/L
+          </p>
+          <p
+            className={cn(
+              "mt-1 text-lg font-semibold tabular-nums sm:text-2xl",
+              netPnl > 0
+                ? "text-profit/95"
+                : netPnl < 0
+                  ? "text-red-300/90"
+                  : "text-[var(--text-primary)]",
+            )}
+          >
+            {netStr}
+          </p>
+          <p className="mt-0.5 text-[11px] text-[var(--text-muted)]">
+            Selected period
+          </p>
         </div>
       </div>
     </motion.div>

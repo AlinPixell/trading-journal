@@ -78,7 +78,7 @@ function QuickProfitCardFields({
   onOpenFullTradeEditor,
 }: QuickProfitCardFieldsProps) {
   return (
-    <>
+    <div className="min-w-0 w-full max-w-full">
       <label className="block text-sm font-medium text-[var(--text-secondary)]">
         Trade date
       </label>
@@ -202,7 +202,7 @@ function QuickProfitCardFields({
           on balance ({formatDollar(accountBalance)})
         </p>
       ) : null}
-    </>
+    </div>
   );
 }
 
@@ -325,7 +325,7 @@ export function QuickProfitForm({
     <div
       className={
         isModal
-          ? "flex h-full min-h-0 flex-1 flex-col gap-3 px-0 pb-0 pt-1"
+          ? "flex h-full min-h-0 min-w-0 max-w-full flex-1 flex-col gap-3 overflow-x-hidden px-0 pb-0 pt-1"
           : "min-h-screen px-5 pb-[calc(8rem+env(safe-area-inset-bottom,0px))] pt-10 sm:px-10"
       }
     >
@@ -333,7 +333,7 @@ export function QuickProfitForm({
         className={cn(
           "mx-auto max-w-md",
           isModal
-            ? "flex h-full min-h-0 min-w-0 flex-1 flex-col gap-5"
+            ? "flex h-full min-h-0 min-w-0 max-w-full flex-1 flex-col gap-5 overflow-x-hidden"
             : "space-y-6",
         )}
       >
@@ -368,7 +368,7 @@ export function QuickProfitForm({
           <div className="flex min-h-0 flex-1 flex-col gap-3">
             <div
               className={cn(
-                "min-h-0 flex-1 overflow-y-auto overscroll-y-contain rounded-md border border-[var(--border)] bg-[var(--bg-raised)]/85 px-5 pt-5 pb-6 [scrollbar-gutter:stable] backdrop-blur-xl sm:px-6 sm:pt-6 sm:pb-7",
+                "min-h-0 min-w-0 max-w-full flex-1 overflow-x-hidden overflow-y-auto overscroll-y-contain rounded-md border border-[var(--border)] bg-[var(--bg-raised)]/85 px-4 pt-5 pb-6 [scrollbar-gutter:stable] backdrop-blur-xl sm:px-6 sm:pt-6 sm:pb-7",
               )}
             >
               <QuickProfitCardFields

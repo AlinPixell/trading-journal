@@ -61,7 +61,7 @@ export function NewTradeModalProvider({
           <Dialog.Content asChild>
             <motion.div
               className={cn(
-                "fixed inset-0 z-50 flex min-h-0 flex-col overflow-hidden bg-[var(--bg-base)] shadow-none backdrop-blur-none focus:outline-none",
+                "fixed inset-0 z-50 flex min-h-0 w-full max-w-[100vw] flex-col overflow-x-hidden overflow-y-hidden bg-[var(--bg-base)] shadow-none backdrop-blur-none focus:outline-none",
                 "h-dvh w-full rounded-none border-0 px-5 pt-[calc(1rem+env(safe-area-inset-top,0px))] pb-[calc(1rem+env(safe-area-inset-bottom,0px))]",
                 "sm:inset-auto sm:bottom-auto sm:left-1/2 sm:top-1/2 sm:h-[min(84vh,1320px)] sm:w-[min(96vw,480px)] sm:-translate-x-1/2 sm:-translate-y-1/2 sm:rounded-md sm:border sm:border-[var(--border)] sm:bg-[var(--bg-base)] sm:p-6 sm:pb-6 sm:shadow-[0_40px_120px_rgba(0,0,0,0.55)]",
               )}

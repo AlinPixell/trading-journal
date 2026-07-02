@@ -80,21 +80,21 @@ export function TradesTable(props: TradesTableProps) {
           <p className="mt-1 text-xs text-[var(--text-muted)]">{headerDescription}</p>
         </div>
 
-        <div className="overflow-x-auto">
-          <table className="w-full min-w-[960px] border-collapse text-left text-[13px]">
+        <div className="max-lg:overflow-x-visible lg:overflow-x-auto">
+          <table className="w-full max-lg:min-w-0 max-lg:table-fixed border-collapse text-left text-[13px] lg:min-w-[960px]">
             <thead>
               <tr className="border-b border-[var(--border-soft)] text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--text-muted)]">
-                <th className="px-4 py-3 sm:px-6">Pair</th>
-                <th className="px-4 py-3 sm:px-6">Side</th>
-                <th className="px-4 py-3 sm:px-6">Entry</th>
-                <th className="px-4 py-3 sm:px-6">Exit</th>
-                <th className="px-4 py-3 sm:px-6">Stop loss</th>
-                <th className="px-4 py-3 sm:px-6">Take profit</th>
-                <th className="px-4 py-3 sm:px-6">PnL</th>
-                <th className="px-4 py-3 sm:px-6">%</th>
-                <th className="px-4 py-3 sm:px-6">Date</th>
-                <th className="px-4 py-3 sm:px-6">Status</th>
-                <th className="px-4 py-3 sm:px-6" aria-label="Actions" />
+                <th className="px-3 py-3 lg:px-6">Pair</th>
+                <th className="hidden px-3 py-3 lg:table-cell lg:px-6">Side</th>
+                <th className="hidden px-3 py-3 lg:table-cell lg:px-6">Entry</th>
+                <th className="hidden px-3 py-3 lg:table-cell lg:px-6">Exit</th>
+                <th className="hidden px-3 py-3 lg:table-cell lg:px-6">Stop loss</th>
+                <th className="hidden px-3 py-3 lg:table-cell lg:px-6">Take profit</th>
+                <th className="px-3 py-3 lg:px-6">PnL</th>
+                <th className="hidden px-3 py-3 lg:table-cell lg:px-6">%</th>
+                <th className="px-3 py-3 lg:px-6">Date</th>
+                <th className="px-3 py-3 lg:px-6">Status</th>
+                <th className="px-3 py-3 lg:px-6" aria-label="Actions" />
               </tr>
             </thead>
             <tbody>
@@ -122,10 +122,10 @@ export function TradesTable(props: TradesTableProps) {
                     }}
                     className="cursor-pointer border-b border-[var(--border-soft)] transition-colors hover:bg-[var(--fx-05)] focus-visible:bg-[var(--fx-05)] focus-visible:outline-none"
                   >
-                    <td className="px-4 py-3.5 font-medium text-[var(--text-primary)] sm:px-6">
-                      {row.pair}
+                    <td className="px-3 py-3.5 font-medium text-[var(--text-primary)] lg:px-6">
+                      <span className="block truncate">{row.pair}</span>
                     </td>
-                    <td className="px-4 py-3.5 sm:px-6">
+                    <td className="hidden px-3 py-3.5 lg:table-cell lg:px-6">
                       <span
                         className={cn(
                           "rounded-md px-2 py-0.5 text-[11px] font-bold uppercase tracking-wide",
@@ -137,21 +137,21 @@ export function TradesTable(props: TradesTableProps) {
                         {row.side}
                       </span>
                     </td>
-                    <td className="px-4 py-3.5 tabular-nums text-[var(--text-primary)] sm:px-6">
+                    <td className="hidden px-3 py-3.5 tabular-nums text-[var(--text-primary)] lg:table-cell lg:px-6">
                       {Math.round(row.entry)}
                     </td>
-                    <td className="px-4 py-3.5 tabular-nums text-[var(--text-secondary)] sm:px-6">
+                    <td className="hidden px-3 py-3.5 tabular-nums text-[var(--text-secondary)] lg:table-cell lg:px-6">
                       {row.exit != null ? Math.round(row.exit) : "—"}
                     </td>
-                    <td className="px-4 py-3.5 tabular-nums text-[var(--text-muted)] sm:px-6">
+                    <td className="hidden px-3 py-3.5 tabular-nums text-[var(--text-muted)] lg:table-cell lg:px-6">
                       {row.stopLoss != null ? Math.round(row.stopLoss) : "—"}
                     </td>
-                    <td className="px-4 py-3.5 tabular-nums text-[var(--text-muted)] sm:px-6">
+                    <td className="hidden px-3 py-3.5 tabular-nums text-[var(--text-muted)] lg:table-cell lg:px-6">
                       {row.takeProfit != null ? Math.round(row.takeProfit) : "—"}
                     </td>
                     <td
                       className={cn(
-                        "px-4 py-3.5 tabular-nums font-medium sm:px-6",
+                        "px-3 py-3.5 tabular-nums font-medium lg:px-6",
                         row.pnl == null
                           ? "text-[var(--text-muted)]"
                           : row.pnl > 0
@@ -172,7 +172,7 @@ export function TradesTable(props: TradesTableProps) {
                     </td>
                     <td
                       className={cn(
-                        "px-4 py-3.5 tabular-nums sm:px-6",
+                        "hidden px-3 py-3.5 tabular-nums lg:table-cell lg:px-6",
                         row.percent == null
                           ? "text-[var(--text-muted)]"
                           : row.percent > 0
@@ -184,8 +184,10 @@ export function TradesTable(props: TradesTableProps) {
                     >
                       {row.percent != null ? `${row.percent > 0 ? "+" : ""}${Math.round(row.percent)}%` : "—"}
                     </td>
-                    <td className="px-4 py-3.5 text-[var(--text-muted)] sm:px-6">{row.dateLabel}</td>
-                    <td className="px-4 py-3.5 sm:px-6">
+                    <td className="px-3 py-3.5 text-[var(--text-muted)] lg:px-6">
+                      <span className="block truncate text-[11px] lg:text-[13px]">{row.dateLabel}</span>
+                    </td>
+                    <td className="px-3 py-3.5 lg:px-6">
                       <span
                         className={cn(
                           "rounded-md px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider",
@@ -202,7 +204,7 @@ export function TradesTable(props: TradesTableProps) {
                         {row.status}
                       </span>
                     </td>
-                    <td className="px-4 py-3.5 sm:px-6">
+                    <td className="px-3 py-3.5 lg:px-6">
                       <button
                         type="button"
                         onClick={(e) => {

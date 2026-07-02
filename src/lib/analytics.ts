@@ -17,23 +17,56 @@ import type { TradingSettings } from "@/types/settings";
 import { getDateKey } from "@/lib/utils";
 import { plannedRiskReward, pnlSign } from "@/lib/tradeHelpers";
 
-export type AnalyticsPeriod = "daily" | "weekly" | "monthly" | "yearly";
+export type AnalyticsPeriod = "daily" | "weekly" | "monthly" | "yearly" | "custom";
 
-export function getPeriodBounds(period: AnalyticsPeriod, anchor: Date) {
+export type AnalyticsDateRange = { start: Date; end: Date };
+
+export function normalizeDateRange(start: Date, end: Date): AnalyticsDateRange {
+  const normalizedStart = startOfDay(start);
+  const normalizedEnd = endOfDay(end);
+  if (normalizedStart <= normalizedEnd) {
+    return { start: normalizedStart, end: normalizedEnd };
+  }
+  return { start: startOfDay(end), end: endOfDay(start) };
+}
+
+export function getPeriodBounds(
+  period: AnalyticsPeriod,
+  anchor: Date,
+  customRange?: AnalyticsDateRange,
+) {
+  if (period === "custom" && customRange) {
+    return normalizeDateRange(customRange.start, customRange.end);
+  }
   const map = {
     daily: { start: startOfDay(anchor), end: endOfDay(anchor) },
     weekly: { start: startOfWeek(anchor, { weekStartsOn: 1 }), end: endOfWeek(anchor, { weekStartsOn: 1 }) },
     monthly: { start: startOfMonth(anchor), end: endOfMonth(anchor) },
     yearly: { start: startOfYear(anchor), end: endOfYear(anchor) },
+    custom: normalizeDateRange(anchor, anchor),
   } as const;
   return map[period];
 }
 
-export function filterTradesByPeriod(trades: Trade[], period: AnalyticsPeriod, anchor: Date) {
-  const { start, end } = getPeriodBounds(period, anchor);
+export function filterTradesByDateRange(
+  trades: Trade[],
+  start: Date,
+  end: Date,
+) {
+  const { start: rangeStart, end: rangeEnd } = normalizeDateRange(start, end);
   return trades.filter((t) =>
-    isWithinInterval(new Date(t.createdAt), { start, end })
+    isWithinInterval(new Date(t.createdAt), { start: rangeStart, end: rangeEnd }),
   );
+}
+
+export function filterTradesByPeriod(
+  trades: Trade[],
+  period: AnalyticsPeriod,
+  anchor: Date,
+  customRange?: AnalyticsDateRange,
+) {
+  const { start, end } = getPeriodBounds(period, anchor, customRange);
+  return filterTradesByDateRange(trades, start, end);
 }
 
 export type DashboardMetrics = {
@@ -93,14 +126,24 @@ export function computeDashboardMetrics(trades: Trade[]): DashboardMetrics {
 
 export type EquityPoint = { t: string; equity: number };
 
-export function buildEquityCurve(trades: Trade[], startBalance: number, period: AnalyticsPeriod, anchor: Date): EquityPoint[] {
-  const filtered = filterTradesByPeriod(trades, period, anchor).slice().sort(
+export function buildEquityCurve(
+  trades: Trade[],
+  startBalance: number,
+  period: AnalyticsPeriod,
+  anchor: Date,
+  customRange?: AnalyticsDateRange,
+): EquityPoint[] {
+  const filtered = filterTradesByPeriod(trades, period, anchor, customRange).slice().sort(
     (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
   );
   const points: EquityPoint[] = [];
   let equity = startBalance;
   const labelFormat =
-    period === "yearly" ? "MMM yyyy" : period === "monthly" ? "MMM d" : "MMM d HH:mm";
+    period === "yearly"
+      ? "MMM yyyy"
+      : period === "monthly" || period === "custom"
+        ? "MMM d"
+        : "MMM d HH:mm";
   for (const t of filtered) {
     equity += t.pnl;
     points.push({
@@ -116,8 +159,13 @@ export function buildEquityCurve(trades: Trade[], startBalance: number, period: 
 
 export type ConsistencyPoint = { day: string; pnl: number; cumulative: number };
 
-export function dailyConsistencySeries(trades: Trade[], period: AnalyticsPeriod, anchor: Date): ConsistencyPoint[] {
-  const { start, end } = getPeriodBounds(period, anchor);
+export function dailyConsistencySeries(
+  trades: Trade[],
+  period: AnalyticsPeriod,
+  anchor: Date,
+  customRange?: AnalyticsDateRange,
+): ConsistencyPoint[] {
+  const { start, end } = getPeriodBounds(period, anchor, customRange);
   const days = eachDayOfInterval({ start, end });
   let cumulative = 0;
   return days.map((day) => {
@@ -188,10 +236,14 @@ export function winStreak(trades: Trade[]): number {
  * Trading days for scaling daily target: 1 for a single day, 5 per week, otherwise Mon–Fri
  * in the selected month or year (weekends excluded).
  */
-export function periodTradingDayCount(period: AnalyticsPeriod, anchor: Date): number {
+export function periodTradingDayCount(
+  period: AnalyticsPeriod,
+  anchor: Date,
+  customRange?: AnalyticsDateRange,
+): number {
   if (period === "daily") return 1;
   if (period === "weekly") return 5;
-  const { start, end } = getPeriodBounds(period, anchor);
+  const { start, end } = getPeriodBounds(period, anchor, customRange);
   return eachDayOfInterval({ start, end }).filter((d) => !isWeekend(d)).length;
 }
 
@@ -202,6 +254,7 @@ export function periodTargetAmount(
   period: AnalyticsPeriod,
   settings: Pick<TradingSettings, "dailyTarget" | "monthlyTarget" | "targetAmount">,
   anchor: Date,
+  customRange?: AnalyticsDateRange,
 ): number {
   const { dailyTarget, monthlyTarget, targetAmount } = settings;
   switch (period) {
@@ -209,14 +262,17 @@ export function periodTargetAmount(
       return Math.max(0, dailyTarget);
     case "weekly":
       if (dailyTarget <= 0) return 0;
-      return dailyTarget * periodTradingDayCount("weekly", anchor);
+      return dailyTarget * periodTradingDayCount("weekly", anchor, customRange);
     case "monthly":
       if (monthlyTarget > 0) return monthlyTarget;
       if (dailyTarget <= 0) return 0;
-      return dailyTarget * periodTradingDayCount("monthly", anchor);
+      return dailyTarget * periodTradingDayCount("monthly", anchor, customRange);
     case "yearly":
       if (targetAmount > 0) return targetAmount;
       if (dailyTarget <= 0) return 0;
-      return dailyTarget * periodTradingDayCount("yearly", anchor);
+      return dailyTarget * periodTradingDayCount("yearly", anchor, customRange);
+    case "custom":
+      if (dailyTarget <= 0) return 0;
+      return dailyTarget * periodTradingDayCount("custom", anchor, customRange);
   }
 }
