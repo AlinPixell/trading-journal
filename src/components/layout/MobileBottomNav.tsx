@@ -10,11 +10,13 @@ import {
   LayoutDashboard,
   LineChart,
   PenTool,
+  Plus,
   Settings2,
   Users,
 } from "lucide-react";
-import { motion } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import { FloatingSubmenu } from "@/components/layout/FloatingSubmenu";
+import { useNewTradeModal } from "@/components/layout/NewTradeModal";
 import { cn } from "@/lib/cn";
 import { useTradeStore } from "@/store/useTradeStore";
 
@@ -34,8 +36,9 @@ const profilesSubmenuItems = [
 const directNavItems = [
   { href: "/dashboard", label: "Analytics", icon: LayoutDashboard },
   { href: "/", label: "Calendar", icon: CalendarDays },
-  { href: "/trades", label: "Trades", icon: LineChart },
 ] as const;
+
+const tradesHref = "/trades";
 
 function isPathActive(pathname: string, href: string) {
   if (href === "/") return pathname === "/";
@@ -132,8 +135,69 @@ function NavIconButton({
   );
 }
 
+function TradesNavSlot({
+  tradesActive,
+  animations,
+  onNewTrade,
+}: {
+  tradesActive: boolean;
+  animations: boolean;
+  onNewTrade: () => void;
+}) {
+  return (
+    <div className="relative flex min-w-0 flex-col items-center">
+      <AnimatePresence mode="wait" initial={false}>
+        {tradesActive ? (
+          <motion.button
+            key="new-trade"
+            type="button"
+            aria-label="New trade"
+            onClick={onNewTrade}
+            className={cn(
+              "flex min-w-0 flex-1 flex-col items-center justify-center gap-0.5 px-0.5 py-1.5",
+              "transition-transform duration-200 select-none",
+            )}
+            initial={animations ? { opacity: 0, scale: 0.88 } : false}
+            animate={animations ? { opacity: 1, scale: 1 } : {}}
+            exit={animations ? { opacity: 0, scale: 0.88 } : {}}
+            transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
+            whileTap={animations ? { scale: 0.92 } : undefined}
+          >
+            <span
+              className={cn(
+                "flex h-6 w-6 items-center justify-center rounded-md",
+                "bg-[var(--cta-bg)] text-[var(--cta-fg)] shadow-[0_-1px_15px_var(--cta-glow)]",
+              )}
+            >
+              <Plus className="h-[18px] w-[18px]" strokeWidth={2.2} />
+            </span>
+          </motion.button>
+        ) : (
+          <motion.div
+            key="trades"
+            className="flex w-full min-w-0 flex-1"
+            initial={animations ? { opacity: 0, scale: 0.88 } : false}
+            animate={animations ? { opacity: 1, scale: 1 } : {}}
+            exit={animations ? { opacity: 0, scale: 0.88 } : {}}
+            transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
+          >
+            <NavIconButton
+              href={tradesHref}
+              label="Trades"
+              icon={LineChart}
+              active={false}
+              animations={animations}
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
 export function MobileBottomNav() {
   const pathname = usePathname();
+  const { openNewTrade } = useNewTradeModal();
   const animations = useTradeStore((s) => s.appSettings.animationsEnabled);
   const [activeMenu, setActiveMenu] = useState<MobileActiveMenu>(null);
 
@@ -147,6 +211,7 @@ export function MobileBottomNav() {
     setActiveMenu((prev) => (prev === menu ? null : menu));
   };
 
+  const tradesActive = isPathActive(pathname, tradesHref);
   const analysisActive = isAnalysisSectionActive(pathname);
   const profilesActive = isProfilesSectionActive(pathname);
 
@@ -182,6 +247,12 @@ export function MobileBottomNav() {
               animations={animations}
             />
           ))}
+
+          <TradesNavSlot
+            tradesActive={tradesActive}
+            animations={animations}
+            onNewTrade={openNewTrade}
+          />
 
           <div className="relative flex min-w-0 flex-col items-center">
             <FloatingSubmenu
